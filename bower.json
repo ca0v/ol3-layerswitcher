@@ -1,18 +1,17 @@
 {
   "name": "ol3-layerswitcher",
-  "version": "2.0.5",
   "homepage": "https://github.com/ca0v/ol3-layerswitcher",
   "authors": [
     "Corey Alix (http://github.com/ca0v)"
   ],
   "description": "Layer switcher control for OpenLayers 3",
   "main": [
-    "built/index.js",
-    "built/css/ol3-layerswitcher.css"
+    "ol3-layerswitcher.ts",
+    "layerswitcher/css/ol3-layerswitcher.scss"
   ],
   "keywords": [
     "openlayers",
-    "ol3",
+    "control",
     "layerswitcher"
   ],
   "license": "MIT",
@@ -21,7 +20,11 @@
     "node_modules",
     "bower_components",
     "typings",
-    "test"
+    "ol3-layerswitcher/examples/**",
+    "ol3-layerswitcher/extras/**",
+    "*.html",
+    "*.md",
+    "*.yml"
   ],
   "devDependencies": {
     "requirejs": "^2.3.2",
