@@ -18,5 +18,5 @@ All layers should have a `title` property and base layers should have a `type` p
 
 ## Consume
 
-* `typings install ol3-layerswitcher=github:ca0v/layerswitcher/built/index.d.ts#v2.0.5 --save`
-* `bower install ol3-layerswitcher=git://github.com/ca0v/layerswitcher.git#v2.0.5 --save`
+* `typings install ol3-layerswitcher=github:ca0v/ol3-layerswitcher/built/index.d.ts#v2.0.5 --global --save`
+* `bower install ol3-layerswitcher=git://github.com/ca0v/ol3-layerswitcher.git#v2.0.5 --save`
