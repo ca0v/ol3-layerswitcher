@@ -12,7 +12,7 @@ All layers should have a `title` property and base layers should have a `type` p
 
 ## Build
 
-* tsd install
+* typings install
 * bower install
 * tsc -w
 
