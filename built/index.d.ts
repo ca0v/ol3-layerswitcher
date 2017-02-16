@@ -59,7 +59,7 @@ declare module "ol3-layerswitcher/ol3-layerswitcher" {
         private renderLayers(map, elm);
     }
 }
-declare module "ol3-layerswitcher" {
+declare module "index" {
     import LayerSwitcher = require("ol3-layerswitcher/ol3-layerswitcher");
     export = LayerSwitcher;
 }
@@ -71,12 +71,12 @@ declare module "ol3-layerswitcher/extras/ajax" {
             use_cors: boolean;
         };
         constructor(url: string);
-        jsonp<T>(args?: any, url?: string): any;
+        jsonp<T>(args?: any, url?: string): JQueryDeferred<T>;
         private ajax<T>(method, args?, url?);
-        get<T>(args?: any): any;
-        post<T>(args?: any): any;
-        put<T>(args?: any): any;
-        delete(args?: any): any;
+        get<T>(args?: any): JQueryDeferred<T>;
+        post<T>(args?: any): JQueryDeferred<T>;
+        put<T>(args?: any): JQueryDeferred<T>;
+        delete(args?: any): JQueryDeferred<{}>;
     }
     export = Ajax;
 }
@@ -360,11 +360,15 @@ declare module "ol3-layerswitcher/extras/ags-catalog" {
     export class Catalog {
         private ajax;
         constructor(url: string);
-        about(data?: any): any;
-        aboutFolder(folder: string): any;
-        aboutFeatureServer(name: string): any;
-        aboutMapServer(name: string): any;
-        aboutLayer(layer: number): any;
+        about(data?: any): JQueryDeferred<CatalogInfo>;
+        aboutFolder(folder: string): JQueryDeferred<CatalogInfo>;
+        aboutFeatureServer(name: string): JQueryDeferred<FeatureServerInfo> & {
+            url: string;
+        };
+        aboutMapServer(name: string): JQueryDeferred<MapServerInfo> & {
+            url: string;
+        };
+        aboutLayer(layer: number): JQueryDeferred<FeatureLayerInfo>;
     }
 }
 declare module "ol3-layerswitcher/extras/ags-webmap" {
@@ -621,7 +625,7 @@ declare module "ol3-layerswitcher/extras/ags-webmap" {
         }
     }
     export class WebMap {
-        get(url?: string): any;
+        get(url?: string): JQueryDeferred<PortalForArcGis.WebMap>;
     }
 }
 declare module "ol3-layerswitcher/extras/ags-layer-factory" {

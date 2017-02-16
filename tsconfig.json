@@ -5,10 +5,12 @@
         "declaration": true,
         "noImplicitAny": false,
         "outFile": "built/index.js",
-        "sourceMap": true
+        "sourceMap": true,
+        "baseUrl": "./bower_components"
     },
-    "exclude": [
-        "bower_components",
-        "built"
+    "include": [
+        "index.ts",
+        "ol3-layerswitcher",
+        "typings/index.d.ts"
     ]
 }

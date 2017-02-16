@@ -71,9 +71,11 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
          *                              **`tipLabel`** `String` - the button tooltip.
          */
         function LayerSwitcher(options) {
+            var _this = this;
             options = defaults(options || {}, DEFAULT_OPTIONS);
-            _super.call(this, options);
-            this.afterCreate(options);
+            _this = _super.call(this, options) || this;
+            _this.afterCreate(options);
+            return _this;
         }
         LayerSwitcher.prototype.afterCreate = function (options) {
             var _this = this;
@@ -268,7 +270,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
     }(ol.control.Control));
     exports.LayerSwitcher = LayerSwitcher;
 });
-define("ol3-layerswitcher", ["require", "exports", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, LayerSwitcher) {
+define("index", ["require", "exports", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, LayerSwitcher) {
     "use strict";
     return LayerSwitcher;
 });
@@ -286,7 +288,7 @@ define("ol3-layerswitcher/extras/ajax", ["require", "exports", "jquery"], functi
             if (url === void 0) { url = this.url; }
             var d = $.Deferred();
             args["callback"] = "define";
-            var uri = url + "?" + Object.keys(args).map(function (k) { return (k + "=" + args[k]); }).join('&');
+            var uri = url + "?" + Object.keys(args).map(function (k) { return k + "=" + args[k]; }).join('&');
             require([uri], function (data) { return d.resolve(data); });
             return d;
         };
@@ -1886,7 +1888,7 @@ define("ol3-layerswitcher/examples/index", ["require", "exports"], function (req
             .map(function (v) { return v.trim(); })
             .filter(function (v) { return !!v; })
             .sort()
-            .map(function (lab) { return ("<a href=" + path + lab + "&debug=1>" + lab + "</a>"); })
+            .map(function (lab) { return "<a href=" + path + lab + "&debug=1>" + lab + "</a>"; })
             .join("<br/>"));
     }
     exports.run = run;
