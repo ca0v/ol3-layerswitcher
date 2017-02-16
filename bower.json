@@ -4,9 +4,9 @@
   "authors": [
     "Corey Alix (http://github.com/ca0v)"
   ],
-  "description": "Layer switcher control for OpenLayers 3",
+  "description": "OpenLayers Layer Switcher",
   "main": [
-    "ol3-layerswitcher.ts",
+    "index.ts",
     "layerswitcher/css/ol3-layerswitcher.scss"
   ],
   "keywords": [
@@ -17,7 +17,6 @@
   "license": "MIT",
   "ignore": [
     "**/.*",
-    "node_modules",
     "bower_components",
     "typings",
     "ol3-layerswitcher/examples/**",
@@ -28,7 +27,7 @@
   ],
   "devDependencies": {
     "requirejs": "^2.3.2",
-    "openlayers": "https://github.com/openlayers/ol3/releases/download/v3.20.1/v3.20.1-dist.zip",
+    "openlayers": "https://github.com/openlayers/ol3/releases/download/v4.0.1/v4.0.1-dist.zip",
     "proj4": "^2.3.17"
   },
   "dependencies": {

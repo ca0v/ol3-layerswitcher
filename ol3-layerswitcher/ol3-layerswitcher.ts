@@ -189,7 +189,7 @@ export class LayerSwitcher extends ol.control.Control {
             let h = view.on("change:resolution", doit);
             doit();
 
-            this.unwatch.push(() => view.unByKey(h));
+            this.unwatch.push(() => ol.Observable.unByKey(h));
         }
     };
 

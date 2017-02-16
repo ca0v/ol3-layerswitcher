@@ -156,7 +156,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                 };
                 var h_1 = view.on("change:resolution", doit);
                 doit();
-                this.unwatch.push(function () { return view.unByKey(h_1); });
+                this.unwatch.push(function () { return ol.Observable.unByKey(h_1); });
             }
         };
         ;
