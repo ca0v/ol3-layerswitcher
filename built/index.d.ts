@@ -1,3 +1,42 @@
+declare module "bower_components/ol3-fun/ol3-fun/common" {
+    export function asArray<T extends HTMLInputElement>(list: NodeList): T[];
+    export function toggle(e: HTMLElement, className: string, toggle?: boolean): void;
+    export function parse<T>(v: string, type: T): T;
+    export function getQueryParameters(options: any, url?: string): void;
+    export function getParameterByName(name: string, url?: string): string;
+    export function doif<T>(v: T, cb: (v: T) => void): void;
+    export function mixin<A extends any, B extends any>(a: A, b: B): A & B;
+    export function defaults<A extends any, B extends any>(a: A, ...b: B[]): A & B;
+    export function cssin(name: string, css: string): () => void;
+    export function debounce<T extends Function>(func: T, wait?: number, immediate?: boolean): T;
+    export function html(html: string): HTMLElement;
+    export function pair<A, B>(a1: A[], a2: B[]): [A, B][];
+    export function range(n: number): any[];
+    export function shuffle<T>(array: T[]): T[];
+}
+declare module "bower_components/ol3-fun/ol3-fun/navigation" {
+    import ol = require("openlayers");
+    export function zoomToFeature(map: ol.Map, feature: ol.Feature, options?: {
+        duration?: number;
+        padding?: number;
+        minResolution?: number;
+    }): void;
+}
+declare module "bower_components/ol3-fun/ol3-fun/parse-dms" {
+    export function parse(dmsString: string): number | {
+        [x: number]: number;
+    };
+}
+declare module "bower_components/ol3-fun/index" {
+    import common = require("bower_components/ol3-fun/ol3-fun/common");
+    import navigation = require("bower_components/ol3-fun/ol3-fun/navigation");
+    import dms = require("bower_components/ol3-fun/ol3-fun/parse-dms");
+    let index: typeof common & {
+        dms: typeof dms;
+        navigation: typeof navigation;
+    };
+    export = index;
+}
 declare module "ol3-layerswitcher/ol3-layerswitcher" {
     import ol = require("openlayers");
     export interface ILayerSwitcherOptions {
@@ -17,45 +56,15 @@ declare module "ol3-layerswitcher/ol3-layerswitcher" {
         panel: HTMLDivElement;
         element: HTMLElement;
         button: HTMLButtonElement;
-        /**
-         * OpenLayers 3 Layer Switcher Control.
-         * See [the examples](./examples) for usage.
-         * @param opt_options Control options, extends olx.control.ControlOptions adding:
-         *                              **`tipLabel`** `String` - the button tooltip.
-         */
         constructor(options?: ILayerSwitcherOptions);
         private afterCreate(options);
-        dispatch(name: string, args?: any): void;
         isVisible(): boolean;
-        /**
-         * Show the layer panel.
-         */
         showPanel(): void;
-        /**
-         * Hide the layer panel.
-         */
         hidePanel(): void;
-        /**
-         * Re-draw the layer panel to represent the current state of the layers.
-         */
         renderPanel(): void;
-        /**
-         * Ensure only the top-most base layer is visible if more than one is visible.
-         */
         private ensureTopVisibleBaseLayerShown();
-        /**
-         * Toggle the visible state of a layer.
-         * Takes care of hiding other layers in the same exclusive group if the layer
-         * is toggle to visible.
-         */
         private setVisible(lyr, visible);
-        /**
-         * Render all layers that are children of a group.
-         */
         private renderLayer(lyr, container);
-        /**
-         * Render all layers that are children of a group.
-         */
         private renderLayers(map, elm);
     }
 }
@@ -636,13 +645,7 @@ declare module "ol3-layerswitcher/extras/ags-layer-factory" {
         asEvented(layer: ol.layer.Tile): ol.layer.Tile;
         asAgsLayer(layerInfo: PortalForArcGis.OperationalLayer, appInfo: PortalForArcGis.WebMap): any;
         asArcGISTiledMapServiceLayer(layerInfo: PortalForArcGis.BaseMapLayer, appInfo?: PortalForArcGis.WebMap): ol.layer.Tile;
-        /**
-         * Renders the features of the featureset (can be points, lines or polygons) into a feature layer
-         */
         asFeatureCollection(layerInfo: PortalForArcGis.OperationalLayer, appInfo?: PortalForArcGis.WebMap): any;
-        /**
-         * Creates a polygon feature from esri data
-         */
         private asEsriGeometryPolygon(featureSet);
         asArcGISFeatureLayer(layerInfo: PortalForArcGis.OperationalLayer, appInfo?: PortalForArcGis.WebMap): ol.layer.Tile;
     }

@@ -3,11 +3,73 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers"], function (require, exports, ol) {
+define("bower_components/ol3-fun/ol3-fun/common", ["require", "exports"], function (require, exports) {
     "use strict";
-    /**
-     * assigns undefined values
-     */
+    function uuid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+    function asArray(list) {
+        var result = new Array(list.length);
+        for (var i = 0; i < list.length; i++) {
+            result.push(list[i]);
+        }
+        return result;
+    }
+    exports.asArray = asArray;
+    function toggle(e, className, toggle) {
+        if (toggle === void 0) { toggle = false; }
+        !toggle ? e.classList.remove(className) : e.classList.add(className);
+    }
+    exports.toggle = toggle;
+    function parse(v, type) {
+        if (typeof type === "string")
+            return v;
+        if (typeof type === "number")
+            return parseFloat(v);
+        if (typeof type === "boolean")
+            return (v === "1" || v === "true");
+        if (Array.isArray(type)) {
+            return (v.split(",").map(function (v) { return parse(v, type[0]); }));
+        }
+        throw "unknown type: " + type;
+    }
+    exports.parse = parse;
+    function getQueryParameters(options, url) {
+        if (url === void 0) { url = window.location.href; }
+        var opts = options;
+        Object.keys(opts).forEach(function (k) {
+            doif(getParameterByName(k, url), function (v) {
+                var value = parse(v, opts[k]);
+                if (value !== undefined)
+                    opts[k] = value;
+            });
+        });
+    }
+    exports.getQueryParameters = getQueryParameters;
+    function getParameterByName(name, url) {
+        if (url === void 0) { url = window.location.href; }
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"), results = regex.exec(url);
+        if (!results)
+            return null;
+        if (!results[2])
+            return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+    exports.getParameterByName = getParameterByName;
+    function doif(v, cb) {
+        if (v !== undefined && v !== null)
+            cb(v);
+    }
+    exports.doif = doif;
+    function mixin(a, b) {
+        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
+        return a;
+    }
+    exports.mixin = mixin;
     function defaults(a) {
         var b = [];
         for (var _i = 1; _i < arguments.length; _i++) {
@@ -18,19 +80,213 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         });
         return a;
     }
-    /**
-     * NodeList -> array
-     */
-    function asArray(list) {
-        var result = new Array(list.length);
-        for (var i = 0; i < list.length; i++) {
-            result.push(list[i]);
+    exports.defaults = defaults;
+    function cssin(name, css) {
+        var id = "style-" + name;
+        var styleTag = document.getElementById(id);
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = id;
+            styleTag.type = "text/css";
+            document.head.appendChild(styleTag);
+            styleTag.appendChild(document.createTextNode(css));
         }
+        var dataset = styleTag.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                styleTag.remove();
+            }
+        };
+    }
+    exports.cssin = cssin;
+    function debounce(func, wait, immediate) {
+        var _this = this;
+        if (wait === void 0) { wait = 50; }
+        if (immediate === void 0) { immediate = false; }
+        var timeout;
+        return (function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            var later = function () {
+                timeout = null;
+                if (!immediate)
+                    func.apply(_this, args);
+            };
+            var callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+            if (callNow)
+                func.call(_this, args);
+        });
+    }
+    exports.debounce = debounce;
+    function html(html) {
+        var a = document.createElement("div");
+        a.innerHTML = html;
+        return (a.firstElementChild || a.firstChild);
+    }
+    exports.html = html;
+    function pair(a1, a2) {
+        var result = [];
+        a1.forEach(function (v1) { return a2.forEach(function (v2) { return result.push([v1, v2]); }); });
         return result;
     }
-    /**
-     * Creates an array containing all sub-layers
-     */
+    exports.pair = pair;
+    function range(n) {
+        var result = new Array(n);
+        for (var i = 0; i < n; i++)
+            result[i] = i;
+        return result;
+    }
+    exports.range = range;
+    function shuffle(array) {
+        var currentIndex = array.length;
+        var temporaryValue;
+        var randomIndex;
+        while (0 !== currentIndex) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+        return array;
+    }
+    exports.shuffle = shuffle;
+});
+define("bower_components/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "bower_components/ol3-fun/ol3-fun/common"], function (require, exports, ol, common_1) {
+    "use strict";
+    function zoomToFeature(map, feature, options) {
+        options = common_1.defaults(options || {}, {
+            duration: 1000,
+            padding: 256,
+            minResolution: 2 * map.getView().getMinResolution()
+        });
+        var view = map.getView();
+        var currentExtent = view.calculateExtent(map.getSize());
+        var targetExtent = feature.getGeometry().getExtent();
+        var doit = function (duration) {
+            view.fit(targetExtent, {
+                size: map.getSize(),
+                padding: [options.padding, options.padding, options.padding, options.padding],
+                minResolution: options.minResolution,
+                duration: duration
+            });
+        };
+        if (ol.extent.containsExtent(currentExtent, targetExtent)) {
+            doit(options.duration);
+        }
+        else if (ol.extent.containsExtent(currentExtent, targetExtent)) {
+            doit(options.duration);
+        }
+        else {
+            var fullExtent = ol.extent.createEmpty();
+            ol.extent.extend(fullExtent, currentExtent);
+            ol.extent.extend(fullExtent, targetExtent);
+            var dscale = ol.extent.getWidth(fullExtent) / ol.extent.getWidth(currentExtent);
+            var duration = 0.5 * options.duration;
+            view.fit(fullExtent, {
+                size: map.getSize(),
+                padding: [options.padding, options.padding, options.padding, options.padding],
+                minResolution: options.minResolution,
+                duration: duration
+            });
+            setTimeout(function () { return doit(0.5 * options.duration); }, duration);
+        }
+    }
+    exports.zoomToFeature = zoomToFeature;
+});
+define("bower_components/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], function (require, exports) {
+    "use strict";
+    function decDegFromMatch(m) {
+        var signIndex = {
+            "-": -1,
+            "N": 1,
+            "S": -1,
+            "E": 1,
+            "W": -1
+        };
+        var latLonIndex = {
+            "-": "",
+            "N": "lat",
+            "S": "lat",
+            "E": "lon",
+            "W": "lon"
+        };
+        var degrees, minutes, seconds, sign, latLon;
+        sign = signIndex[m[2]] || signIndex[m[1]] || signIndex[m[6]] || 1;
+        degrees = Number(m[3]);
+        minutes = m[4] ? Number(m[4]) : 0;
+        seconds = m[5] ? Number(m[5]) : 0;
+        latLon = latLonIndex[m[1]] || latLonIndex[m[6]];
+        if (!inRange(degrees, 0, 180))
+            throw 'Degrees out of range';
+        if (!inRange(minutes, 0, 60))
+            throw 'Minutes out of range';
+        if (!inRange(seconds, 0, 60))
+            throw 'Seconds out of range';
+        return {
+            decDeg: sign * (degrees + minutes / 60 + seconds / 3600),
+            latLon: latLon
+        };
+    }
+    function inRange(value, a, b) {
+        return value >= a && value <= b;
+    }
+    function parse(dmsString) {
+        dmsString = dmsString.trim();
+        var dmsRe = /([NSEW])?(-)?(\d+(?:\.\d+)?)[°º:d\s]?\s?(?:(\d+(?:\.\d+)?)['’‘′:]\s?(?:(\d{1,2}(?:\.\d+)?)(?:"|″|’’|'')?)?)?\s?([NSEW])?/i;
+        var dmsString2;
+        var m1 = dmsString.match(dmsRe);
+        if (!m1)
+            throw 'Could not parse string';
+        if (m1[1]) {
+            m1[6] = undefined;
+            dmsString2 = dmsString.substr(m1[0].length - 1).trim();
+        }
+        else {
+            dmsString2 = dmsString.substr(m1[0].length).trim();
+        }
+        var decDeg1 = decDegFromMatch(m1);
+        var m2 = dmsString2.match(dmsRe);
+        var decDeg2 = m2 && decDegFromMatch(m2);
+        if (typeof decDeg1.latLon === 'undefined') {
+            if (!isNaN(decDeg1.decDeg) && decDeg2 && isNaN(decDeg2.decDeg)) {
+                return decDeg1.decDeg;
+            }
+            else if (!isNaN(decDeg1.decDeg) && decDeg2 && !isNaN(decDeg2.decDeg)) {
+                decDeg1.latLon = 'lat';
+                decDeg2.latLon = 'lon';
+            }
+            else {
+                throw 'Could not parse string';
+            }
+        }
+        if (typeof decDeg2.latLon === 'undefined') {
+            decDeg2.latLon = decDeg1.latLon === 'lat' ? 'lon' : 'lat';
+        }
+        return _a = {},
+            _a[decDeg1.latLon] = decDeg1.decDeg,
+            _a[decDeg2.latLon] = decDeg2.decDeg,
+            _a;
+        var _a;
+    }
+    exports.parse = parse;
+});
+define("bower_components/ol3-fun/index", ["require", "exports", "bower_components/ol3-fun/ol3-fun/common", "bower_components/ol3-fun/ol3-fun/navigation", "bower_components/ol3-fun/ol3-fun/parse-dms"], function (require, exports, common, navigation, dms) {
+    "use strict";
+    var index = common.defaults(common, {
+        dms: dms,
+        navigation: navigation
+    });
+    return index;
+});
+define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers", "bower_components/ol3-fun/index"], function (require, exports, ol, ol3_fun_1) {
+    "use strict";
     function allLayers(lyr) {
         var result = [];
         lyr.getLayers().forEach(function (lyr, idx, a) {
@@ -41,12 +297,6 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         });
         return result;
     }
-    /**
-     * Generate a UUID
-     * @returns UUID
-     *
-     * Adapted from http://stackoverflow.com/a/2117523/526860
-     */
     function uuid() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -64,15 +314,9 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
     };
     var LayerSwitcher = (function (_super) {
         __extends(LayerSwitcher, _super);
-        /**
-         * OpenLayers 3 Layer Switcher Control.
-         * See [the examples](./examples) for usage.
-         * @param opt_options Control options, extends olx.control.ControlOptions adding:
-         *                              **`tipLabel`** `String` - the button tooltip.
-         */
         function LayerSwitcher(options) {
             var _this = this;
-            options = defaults(options || {}, DEFAULT_OPTIONS);
+            options = ol3_fun_1.defaults(options || {}, DEFAULT_OPTIONS);
             _this = _super.call(this, options) || this;
             _this.afterCreate(options);
             return _this;
@@ -105,33 +349,19 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                 });
             }
         };
-        LayerSwitcher.prototype.dispatch = function (name, args) {
-            var event = new Event(name);
-            args && Object.keys(args).forEach(function (k) { return event[k] = args[k]; });
-            this["dispatchEvent"](event);
-        };
         LayerSwitcher.prototype.isVisible = function () {
             return this.element.className != this.hiddenClassName;
         };
-        /**
-         * Show the layer panel.
-         */
         LayerSwitcher.prototype.showPanel = function () {
             if (this.element.className != this.shownClassName) {
                 this.element.className = this.shownClassName;
                 this.renderPanel();
             }
         };
-        /**
-         * Hide the layer panel.
-         */
         LayerSwitcher.prototype.hidePanel = function () {
             this.element.className = this.hiddenClassName;
             this.unwatch.forEach(function (f) { return f(); });
         };
-        /**
-         * Re-draw the layer panel to represent the current state of the layers.
-         */
         LayerSwitcher.prototype.renderPanel = function () {
             var _this = this;
             this.ensureTopVisibleBaseLayerShown();
@@ -160,35 +390,26 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
             }
         };
         ;
-        /**
-         * Ensure only the top-most base layer is visible if more than one is visible.
-         */
         LayerSwitcher.prototype.ensureTopVisibleBaseLayerShown = function () {
             var visibleBaseLyrs = allLayers(this.getMap()).filter(function (l) { return l.get('type') === 'base' && l.getVisible(); });
             if (visibleBaseLyrs.length)
                 this.setVisible(visibleBaseLyrs.shift(), true);
         };
         ;
-        /**
-         * Toggle the visible state of a layer.
-         * Takes care of hiding other layers in the same exclusive group if the layer
-         * is toggle to visible.
-         */
         LayerSwitcher.prototype.setVisible = function (lyr, visible) {
             var _this = this;
             if (lyr.getVisible() !== visible) {
                 if (visible && lyr.get('type') === 'base') {
-                    // Hide all other base layers regardless of grouping
                     allLayers(this.getMap()).filter(function (l) { return l !== lyr && l.get('type') === 'base' && l.getVisible(); }).forEach(function (l) { return _this.setVisible(l, false); });
                 }
                 lyr.setVisible(visible);
-                this.dispatch(visible ? "show-layer" : "hide-layer", { layer: lyr });
+                this.dispatchEvent({
+                    type: visible ? "show-layer" : "hide-layer",
+                    layer: lyr
+                });
             }
         };
         ;
-        /**
-         * Render all layers that are children of a group.
-         */
         LayerSwitcher.prototype.renderLayer = function (lyr, container) {
             var _this = this;
             var result;
@@ -199,7 +420,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
             label.htmlFor = uuid();
             lyr.on('load:start', function () { return li.classList.add("loading"); });
             lyr.on('load:end', function () { return li.classList.remove("loading"); });
-            li.classList.toggle("loading", true === lyr.get("loading"));
+            ol3_fun_1.toggle(li, "loading", true === lyr.get("loading"));
             if ('getLayers' in lyr && !lyr.get('combine')) {
                 if (!lyr.get('label-only')) {
                     var input_1 = result = document.createElement('input');
@@ -207,7 +428,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                     input_1.type = 'checkbox';
                     input_1.checked = lyr.getVisible();
                     input_1.addEventListener('change', function () {
-                        ul_1.classList.toggle('hide-layer-group', !input_1.checked);
+                        ol3_fun_1.toggle(ul_1, 'hide-layer-group', !input_1.checked);
                         _this.setVisible(lyr, input_1.checked);
                         var childLayers = lyr.getLayers();
                         _this.state.filter(function (s) { return s.container === ul_1 && s.input && s.input.checked; }).forEach(function (state) {
@@ -220,7 +441,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                 label.innerHTML = lyrTitle;
                 li.appendChild(label);
                 var ul_1 = document.createElement('ul');
-                result && ul_1.classList.toggle('hide-layer-group', !result.checked);
+                result && ol3_fun_1.toggle(ul_1, 'hide-layer-group', !result.checked);
                 li.appendChild(ul_1);
                 this.renderLayers(lyr, ul_1);
             }
@@ -233,7 +454,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                     input_2.type = 'radio';
                     input_2.addEventListener("change", function () {
                         if (input_2.checked) {
-                            asArray(_this.panel.getElementsByClassName("basemap")).filter(function (i) { return i.tagName === "INPUT"; }).forEach(function (i) {
+                            ol3_fun_1.asArray(_this.panel.getElementsByClassName("basemap")).filter(function (i) { return i.tagName === "INPUT"; }).forEach(function (i) {
                                 if (i.checked && i !== input_2)
                                     i.checked = false;
                             });
@@ -258,9 +479,6 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                 layer: lyr
             });
         };
-        /**
-         * Render all layers that are children of a group.
-         */
         LayerSwitcher.prototype.renderLayers = function (map, elm) {
             var _this = this;
             var lyrs = map.getLayers().getArray().slice().reverse();
@@ -292,7 +510,6 @@ define("ol3-layerswitcher/extras/ajax", ["require", "exports", "jquery"], functi
             require([uri], function (data) { return d.resolve(data); });
             return d;
         };
-        // http://www.html5rocks.com/en/tutorials/cors/    
         Ajax.prototype.ajax = function (method, args, url) {
             if (url === void 0) { url = this.url; }
             var isData = method === "POST" || method === "PUT";
@@ -336,7 +553,6 @@ define("ol3-layerswitcher/extras/ajax", ["require", "exports", "jquery"], functi
                 }
             };
             client.onerror = function () { return d.reject(client.statusText); };
-            // Return the promise
             return d;
         };
         Ajax.prototype.get = function (args) {
@@ -357,9 +573,6 @@ define("ol3-layerswitcher/extras/ajax", ["require", "exports", "jquery"], functi
 });
 define("ol3-layerswitcher/extras/ags-catalog", ["require", "exports", "ol3-layerswitcher/extras/ajax"], function (require, exports, Ajax) {
     "use strict";
-    /**
-     * assigns undefined values
-     */
     function defaults(a) {
         var b = [];
         for (var _i = 1; _i < arguments.length; _i++) {
@@ -432,14 +645,10 @@ define("ol3-layerswitcher/extras/ags-webmap", ["require", "exports", "ol3-layers
 });
 define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
-    /**
-     * scale is units per pixel assuming a pixel is a certain size (0.028 cm or 1/90 inches)
-     * resolution is how many
-     */
     function asRes(scale, dpi) {
         if (dpi === void 0) { dpi = 90.71428571428572; }
         var inchesPerFoot = 12.0;
-        var inchesPerMeter = (inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]); //39.37007874015748;
+        var inchesPerMeter = (inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]);
         var dotsPerUnit = dpi * inchesPerMeter;
         return scale / dotsPerUnit;
     }
@@ -447,9 +656,7 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
         function AgsLayerFactory() {
         }
         AgsLayerFactory.prototype.asExtent = function (appInfo) {
-            // not defined?
         };
-        // make the layer progress aware                                
         AgsLayerFactory.prototype.asEvented = function (layer) {
             var loadCount = 0;
             var source = layer.getSource();
@@ -481,7 +688,6 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
             }
         };
         AgsLayerFactory.prototype.asArcGISTiledMapServiceLayer = function (layerInfo, appInfo) {
-            // doesn't seem to care about the projection
             var srs = layerInfo.spatialReference || appInfo.spatialReference;
             var srsCode = srs && srs.latestWkid || "3857";
             var source = new ol.source.XYZ({
@@ -498,9 +704,6 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
             var layer = new ol.layer.Tile(tileOptions);
             return layer;
         };
-        /**
-         * Renders the features of the featureset (can be points, lines or polygons) into a feature layer
-         */
         AgsLayerFactory.prototype.asFeatureCollection = function (layerInfo, appInfo) {
             var _this = this;
             var source = new ol.source.Vector();
@@ -508,8 +711,6 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
                 title: layerInfo.id,
                 source: source
             });
-            // obviously we don't want everything to be red, there's all this still to consider....
-            // layerInfo.featureCollection.layers[0].layerDefinition.drawingInfo.renderer.uniqueValueInfos[0].symbol.color;
             var style = new ol.style.Style({
                 fill: new ol.style.Fill({
                     color: "red"
@@ -531,9 +732,6 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
             });
             return layer;
         };
-        /**
-         * Creates a polygon feature from esri data
-         */
         AgsLayerFactory.prototype.asEsriGeometryPolygon = function (featureSet) {
             console.assert(featureSet.geometryType === "esriGeometryPolygon");
             return featureSet.features.map(function (f) { return new ol.Feature({
@@ -542,7 +740,6 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
             }); });
         };
         AgsLayerFactory.prototype.asArcGISFeatureLayer = function (layerInfo, appInfo) {
-            // will want to support feature services at some point but just a demo so re-route to MapServer
             layerInfo.url = layerInfo.url.replace("FeatureServer", "MapServer");
             layerInfo.id = layerInfo.url.substring(1 + layerInfo.url.lastIndexOf("/"));
             layerInfo.url = layerInfo.url.substring(0, layerInfo.url.lastIndexOf("/"));
@@ -574,14 +771,10 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
 define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-webmap", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, LayerSwitcher, WebMap, AgsLayerFactory) {
     "use strict";
     function run() {
-        /**
-         * scale is units per pixel assuming a pixel is a certain size (0.028 cm or 1/90 inches)
-         * resolution is how many
-         */
         function asRes(scale, dpi) {
             if (dpi === void 0) { dpi = 90.71428571428572; }
             var inchesPerFoot = 12.0;
-            var inchesPerMeter = (inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]); //39.37007874015748;
+            var inchesPerMeter = (inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]);
             var dotsPerUnit = dpi * inchesPerMeter;
             return scale / dotsPerUnit;
         }
@@ -658,14 +851,10 @@ define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openl
     "use strict";
     function run() {
         ol.proj.setProj4(proj4);
-        /**
-         * scale is units per pixel assuming a pixel is a certain size (0.028 cm or 1/90 inches)
-         * resolution is how many
-         */
         function asRes(scale, dpi) {
             if (dpi === void 0) { dpi = 90.71428571428572; }
             var inchesPerFoot = 12.0;
-            var inchesPerMeter = (inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]); //39.37007874015748;
+            var inchesPerMeter = (inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]);
             var dotsPerUnit = dpi * inchesPerMeter;
             return scale / dotsPerUnit;
         }
@@ -735,7 +924,6 @@ define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openl
                                     var extent = null;
                                     [s.initialExtent, s.fullExtent].some(function (agsExtent) {
                                         var olExtent = ol.proj.transformExtent([agsExtent.xmin, agsExtent.ymin, agsExtent.xmax, agsExtent.ymax], inSrs, 'EPSG:3857');
-                                        // not always valid!
                                         if (olExtent.every(function (v) { return !isNaN(v); })) {
                                             extent = olExtent;
                                             return true;
@@ -783,7 +971,6 @@ define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openl
                                                 tileOptions.minResolution = asRes(layerInfo.maxScale);
                                             var layer = new ol.layer.Tile(tileOptions);
                                             folderGroup.getLayers().push(layer);
-                                            // make the layer progress aware                                
                                             {
                                                 var loadCount_1 = 0;
                                                 source.on("tileloadstart", function () {
