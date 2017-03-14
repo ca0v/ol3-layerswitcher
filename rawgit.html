@@ -18,13 +18,14 @@
             padding: 0;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.3/require.min.js"></script>
 </head>
 
 <body>
     <div id="map"></div>
     <script>
-        function getParameterByName(name, url = window.location.href) {
+        function getParameterByName(name, url) {
+            url = url || window.location.href;
             name = name.replace(/[\[\]]/g, "\\$&");
             var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
                 results = regex.exec(url);
@@ -34,30 +35,31 @@
         }
 
         let debug = getParameterByName("debug") === "1";
+        let localhost = window.location.hostname === "localhost";
 
         require.config({
 
             packages: [
                 {
                     name: 'jquery',
-                    location: 'https://code.jquery.com',
-                    main: debug ? 'jquery-3.1.0' : 'jquery-3.1.0.min'
+                    location: localhost ? "./bower_components/jquery/dist" : 'https://cdn.rawgit.com/jquery/jquery-dist/3.1.1/dist',
+                    main: debug ? 'jquery' : 'jquery.min'
                 },
                 {
                     name: 'openlayers',
-                    location: 'https://cdnjs.cloudflare.com/ajax/libs/openlayers/4.0.1',
+                    location: localhost ? "./bower_components/openlayers" : 'https://cdnjs.cloudflare.com/ajax/libs/openlayers/4.0.1',
                     main: debug ? 'ol-debug' : 'ol'
                 },
                 {
                     name: "proj4",
-                    location: "https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14",
+                    location: localhost ? "./bower_components/proj4/dist" : "https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.14",
                     main: debug ? "proj4-src.js" : 'proj4.js'
                 }
             ],
 
             deps: ['built/index'],
-            callback: () => {
-                require([getParameterByName("run") || "ol3-layerswitcher/examples/index"], example => example.run());
+            callback: function () {
+                require([getParameterByName("run") || "ol3-layerswitcher/examples/index"], function (example) { example.run(); });
             }
         });
     </script>

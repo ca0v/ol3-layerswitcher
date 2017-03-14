@@ -1,25 +1,5 @@
 import ol = require("openlayers");
-
-/**
- * assigns undefined values
- */
-function defaults<A, B>(a: A, ...b: B[]): A & B {
-    b.forEach(b => {
-        Object.keys(b).filter(k => a[k] === undefined).forEach(k => a[k] = b[k]);
-    });
-    return <A & B>a;
-}
-
-/**
- * NodeList -> array
- */
-function asArray<T extends HTMLInputElement>(list: NodeList) {
-    let result = <Array<T>>new Array(list.length);
-    for (let i = 0; i < list.length; i++) {
-        result.push(<T>list[i]);
-    }
-    return result;
-}
+import { asArray, defaults, toggle } from "ol3-fun";
 
 /**
  * Creates an array containing all sub-layers
@@ -127,12 +107,6 @@ export class LayerSwitcher extends ol.control.Control {
 
     }
 
-    dispatch(name: string, args?: any) {
-        let event = new Event(name);
-        args && Object.keys(args).forEach(k => event[k] = args[k]);
-        this["dispatchEvent"](event);
-    }
-
     isVisible() {
         return this.element.className != this.hiddenClassName
     }
@@ -213,7 +187,10 @@ export class LayerSwitcher extends ol.control.Control {
                 allLayers(this.getMap()).filter(l => l !== lyr && l.get('type') === 'base' && l.getVisible()).forEach(l => this.setVisible(l, false));
             }
             lyr.setVisible(visible);
-            this.dispatch(visible ? "show-layer" : "hide-layer", { layer: lyr });
+            this.dispatchEvent({
+                type: visible ? "show-layer" : "hide-layer",
+                layer: lyr
+            });
         }
     };
 
@@ -233,7 +210,7 @@ export class LayerSwitcher extends ol.control.Control {
 
         lyr.on('load:start', () => li.classList.add("loading"));
         lyr.on('load:end', () => li.classList.remove("loading"));
-        li.classList.toggle("loading", true === lyr.get("loading"));
+        toggle(li, "loading", true === lyr.get("loading"));
 
         if ('getLayers' in lyr && !lyr.get('combine')) {
 
@@ -244,7 +221,7 @@ export class LayerSwitcher extends ol.control.Control {
                 input.checked = lyr.getVisible();
 
                 input.addEventListener('change', () => {
-                    ul.classList.toggle('hide-layer-group', !input.checked);
+                    toggle(ul, 'hide-layer-group', !input.checked);
                     this.setVisible(lyr, input.checked);
                     let childLayers = (<ol.layer.Group>lyr).getLayers();
                     this.state.filter(s => s.container === ul && s.input && s.input.checked).forEach(state => {
@@ -258,7 +235,7 @@ export class LayerSwitcher extends ol.control.Control {
             label.innerHTML = lyrTitle;
             li.appendChild(label);
             let ul = document.createElement('ul');
-            result && ul.classList.toggle('hide-layer-group', !result.checked);
+            result && toggle(ul, 'hide-layer-group', !result.checked);
             li.appendChild(ul);
 
             this.renderLayers(<ol.layer.Group>lyr, ul);
