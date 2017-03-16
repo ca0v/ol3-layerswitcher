@@ -380,7 +380,6 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                     _this.state.filter(function (s) { return !!s.input; }).forEach(function (s) {
                         var min = s.layer.getMinResolution();
                         var max = s.layer.getMaxResolution();
-                        console.log(res, min, max, s.layer.get("title"));
                         s.input.disabled = !(min <= res && (max === 0 || res < max));
                     });
                 };

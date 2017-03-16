@@ -156,7 +156,6 @@ export class LayerSwitcher extends ol.control.Control {
                 this.state.filter(s => !!s.input).forEach(s => {
                     let min = s.layer.getMinResolution();
                     let max = s.layer.getMaxResolution();
-                    console.log(res, min, max, s.layer.get("title"));
                     s.input.disabled = !(min <= res && (max === 0 || res < max));
                 });
             };
