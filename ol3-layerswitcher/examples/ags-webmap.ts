@@ -1,5 +1,5 @@
 import ol = require("openlayers");
-import LayerSwitcher = require("../ol3-layerswitcher");
+import { LayerSwitcher } from "../ol3-layerswitcher";
 import WebMap = require("../extras/ags-webmap");
 import AgsLayerFactory = require("../extras/ags-layer-factory");
 
@@ -54,7 +54,7 @@ export function run() {
     }) {
         let webmap = new WebMap.WebMap();
 
-        let webmapGroup = new ol.layer.Group({
+        let webmapGroup = new ol.layer.Group(<any>{
             title: "WebMap",
             visible: false,
             layers: []
@@ -66,7 +66,7 @@ export function run() {
         webmap.get(options.url).then(result => {
 
             if (result.baseMap) {
-                let baseLayers = new ol.layer.Group({
+                let baseLayers = new ol.layer.Group(<any>{
                     title: "Basemap Layers",
                     visible: false,
                     layers: []
@@ -81,7 +81,7 @@ export function run() {
             }
 
             if (result.operationalLayers) {
-                let opLayers = new ol.layer.Group({
+                let opLayers = new ol.layer.Group(<any>{
                     title: "Operational Layers",
                     visible: false,
                     layers: []

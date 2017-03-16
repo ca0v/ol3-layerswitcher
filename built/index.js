@@ -767,7 +767,7 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
     }());
     return AgsLayerFactory;
 });
-define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-webmap", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, LayerSwitcher, WebMap, AgsLayerFactory) {
+define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-webmap", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_1, WebMap, AgsLayerFactory) {
     "use strict";
     function run() {
         function asRes(scale, dpi) {
@@ -786,7 +786,7 @@ define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlaye
                 zoom: 6
             })
         });
-        var layerSwitcher = new LayerSwitcher({
+        var layerSwitcher = new ol3_layerswitcher_1.LayerSwitcher({
             openOnMouseOver: true
         });
         layerSwitcher.on("show-layer", function (args) {
@@ -846,7 +846,7 @@ define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlaye
     }
     exports.run = run;
 });
-define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-catalog", "proj4", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_1, AgsDiscovery, proj4, AgsLayerFactory) {
+define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-catalog", "proj4", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_2, AgsDiscovery, proj4, AgsLayerFactory) {
     "use strict";
     function run() {
         ol.proj.setProj4(proj4);
@@ -867,7 +867,7 @@ define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openl
                 zoom: 6
             })
         });
-        var layerSwitcher = new ol3_layerswitcher_1.LayerSwitcher({
+        var layerSwitcher = new ol3_layerswitcher_2.LayerSwitcher({
             openOnMouseOver: true
         });
         layerSwitcher.on("show-layer", function (args) {
@@ -2080,7 +2080,7 @@ define("ol3-layerswitcher/examples/index", ["require", "exports"], function (req
     exports.run = run;
     ;
 });
-define("ol3-layerswitcher/examples/layerswitcher", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, ol, ol3_layerswitcher_2) {
+define("ol3-layerswitcher/examples/layerswitcher", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, ol, ol3_layerswitcher_3) {
     "use strict";
     function run() {
         var map = new ol.Map({
@@ -2135,7 +2135,7 @@ define("ol3-layerswitcher/examples/layerswitcher", ["require", "exports", "openl
                 zoom: 6
             })
         });
-        var layerSwitcher = new ol3_layerswitcher_2.LayerSwitcher({
+        var layerSwitcher = new ol3_layerswitcher_3.LayerSwitcher({
             tipLabel: 'Layers',
             openOnMouseOver: true,
             closeOnMouseOut: true,
