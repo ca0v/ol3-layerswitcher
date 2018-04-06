@@ -1,10 +1,16 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 define("bower_components/ol3-fun/ol3-fun/common", ["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function uuid() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -160,6 +166,7 @@ define("bower_components/ol3-fun/ol3-fun/common", ["require", "exports"], functi
 });
 define("bower_components/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "bower_components/ol3-fun/ol3-fun/common"], function (require, exports, ol, common_1) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function zoomToFeature(map, feature, options) {
         options = common_1.defaults(options || {}, {
             duration: 1000,
@@ -202,6 +209,7 @@ define("bower_components/ol3-fun/ol3-fun/navigation", ["require", "exports", "op
 });
 define("bower_components/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function decDegFromMatch(m) {
         var signIndex = {
             "-": -1,
@@ -287,6 +295,7 @@ define("bower_components/ol3-fun/index", ["require", "exports", "bower_component
 });
 define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers", "bower_components/ol3-fun/index"], function (require, exports, ol, ol3_fun_1) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function allLayers(lyr) {
         var result = [];
         lyr.getLayers().forEach(function (lyr, idx, a) {
@@ -491,6 +500,80 @@ define("index", ["require", "exports", "ol3-layerswitcher/ol3-layerswitcher"], f
     "use strict";
     return LayerSwitcher;
 });
+define("ol3-layerswitcher/examples/accessibility", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, ol, ol3_layerswitcher_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function run() {
+        var map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Group({
+                    'title': 'Base maps',
+                    layers: [
+                        new ol.layer.Group({
+                            'title': 'OSM and Water Color',
+                            'label-only': true,
+                            layers: [
+                                new ol.layer.Tile({
+                                    title: 'Water color',
+                                    type: 'base',
+                                    visible: false,
+                                    source: new ol.source.Stamen({
+                                        layer: 'watercolor'
+                                    })
+                                }),
+                                new ol.layer.Tile({
+                                    title: 'OSM',
+                                    type: 'base',
+                                    visible: true,
+                                    source: new ol.source.OSM()
+                                })
+                            ]
+                        })
+                    ]
+                }),
+                new ol.layer.Group({
+                    title: 'Overlays',
+                    layers: [
+                        new ol.layer.Group({
+                            title: "Countries",
+                            layers: [
+                                new ol.layer.Tile({
+                                    title: 'Countries',
+                                    source: new ol.source.TileWMS({
+                                        url: 'http://demo.opengeo.org/geoserver/wms',
+                                        params: { 'LAYERS': 'ne:ne_10m_admin_1_states_provinces_lines_shp' },
+                                        serverType: 'geoserver'
+                                    })
+                                })
+                            ]
+                        })
+                    ]
+                })
+            ],
+            view: new ol.View({
+                center: ol.proj.transform([-85, 35], 'EPSG:4326', 'EPSG:3857'),
+                zoom: 6
+            })
+        });
+        var layerSwitcher = new ol3_layerswitcher_1.LayerSwitcher({
+            tipLabel: 'Layers',
+            openOnMouseOver: false,
+            closeOnMouseOut: false,
+            openOnClick: true,
+            closeOnClick: true,
+            target: null
+        });
+        layerSwitcher.on("show-layer", function (args) {
+            console.log("show layer:", args.layer.get("title"));
+        });
+        layerSwitcher.on("hide-layer", function (args) {
+            console.log("hide layer:", args.layer.get("title"));
+        });
+        map.addControl(layerSwitcher);
+    }
+    exports.run = run;
+});
 define("ol3-layerswitcher/extras/ajax", ["require", "exports", "jquery"], function (require, exports, $) {
     "use strict";
     var Ajax = (function () {
@@ -572,6 +655,7 @@ define("ol3-layerswitcher/extras/ajax", ["require", "exports", "jquery"], functi
 });
 define("ol3-layerswitcher/extras/ags-catalog", ["require", "exports", "ol3-layerswitcher/extras/ajax"], function (require, exports, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function defaults(a) {
         var b = [];
         for (var _i = 1; _i < arguments.length; _i++) {
@@ -626,6 +710,7 @@ define("ol3-layerswitcher/extras/ags-catalog", ["require", "exports", "ol3-layer
 });
 define("ol3-layerswitcher/extras/ags-webmap", ["require", "exports", "ol3-layerswitcher/extras/ajax"], function (require, exports, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var DEFAULT_URLS = [
         "https://www.arcgis.com/sharing/rest/content/items/204d94c9b1374de9a21574c9efa31164/data?f=json",
         "https://www.arcgis.com/sharing/rest/content/items/a193c5459e6e4fd99ebf09d893d65cf0/data?f=json"
@@ -767,8 +852,9 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
     }());
     return AgsLayerFactory;
 });
-define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-webmap", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_1, WebMap, AgsLayerFactory) {
+define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-webmap", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_2, WebMap, AgsLayerFactory) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         function asRes(scale, dpi) {
             if (dpi === void 0) { dpi = 90.71428571428572; }
@@ -786,7 +872,7 @@ define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlaye
                 zoom: 6
             })
         });
-        var layerSwitcher = new ol3_layerswitcher_1.LayerSwitcher({
+        var layerSwitcher = new ol3_layerswitcher_2.LayerSwitcher({
             openOnMouseOver: true
         });
         layerSwitcher.on("show-layer", function (args) {
@@ -846,8 +932,9 @@ define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlaye
     }
     exports.run = run;
 });
-define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-catalog", "proj4", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_2, AgsDiscovery, proj4, AgsLayerFactory) {
+define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-catalog", "proj4", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_3, AgsDiscovery, proj4, AgsLayerFactory) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         ol.proj.setProj4(proj4);
         function asRes(scale, dpi) {
@@ -867,7 +954,7 @@ define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openl
                 zoom: 6
             })
         });
-        var layerSwitcher = new ol3_layerswitcher_2.LayerSwitcher({
+        var layerSwitcher = new ol3_layerswitcher_3.LayerSwitcher({
             openOnMouseOver: true
         });
         layerSwitcher.on("show-layer", function (args) {
@@ -994,6 +1081,99 @@ define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openl
             });
         }
         discover("//sampleserver1.arcgisonline.com/arcgis/rest/services");
+    }
+    exports.run = run;
+});
+define("ol3-layerswitcher/examples/index", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function run() {
+        var l = window.location;
+        var path = "" + l.origin + l.pathname + "?run=ol3-layerswitcher/examples/";
+        var labs = "\n    ags-discovery\n    ags-webmap\n    layerswitcher\n    accessibility\n\n    index\n    ";
+        document.writeln("\n    <p>\n    Watch the console output for failed assertions (blank is good).\n    </p>\n    ");
+        document.writeln(labs
+            .split(/ /)
+            .map(function (v) { return v.trim(); })
+            .filter(function (v) { return !!v; })
+            .sort()
+            .map(function (lab) { return "<a href=" + path + lab + "&debug=1>" + lab + "</a>"; })
+            .join("<br/>"));
+    }
+    exports.run = run;
+    ;
+});
+define("ol3-layerswitcher/examples/layerswitcher", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, ol, ol3_layerswitcher_4) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function run() {
+        var map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Group({
+                    'title': 'Base maps',
+                    layers: [
+                        new ol.layer.Group({
+                            'title': 'OSM and Water Color',
+                            'label-only': true,
+                            layers: [
+                                new ol.layer.Tile({
+                                    title: 'Water color',
+                                    type: 'base',
+                                    visible: false,
+                                    source: new ol.source.Stamen({
+                                        layer: 'watercolor'
+                                    })
+                                }),
+                                new ol.layer.Tile({
+                                    title: 'OSM',
+                                    type: 'base',
+                                    visible: true,
+                                    source: new ol.source.OSM()
+                                })
+                            ]
+                        })
+                    ]
+                }),
+                new ol.layer.Group({
+                    title: 'Overlays',
+                    layers: [
+                        new ol.layer.Group({
+                            title: "Countries",
+                            layers: [
+                                new ol.layer.Tile({
+                                    title: 'Countries',
+                                    source: new ol.source.TileWMS({
+                                        url: 'http://demo.opengeo.org/geoserver/wms',
+                                        params: { 'LAYERS': 'ne:ne_10m_admin_1_states_provinces_lines_shp' },
+                                        serverType: 'geoserver'
+                                    })
+                                })
+                            ]
+                        })
+                    ]
+                })
+            ],
+            view: new ol.View({
+                center: ol.proj.transform([-85, 35], 'EPSG:4326', 'EPSG:3857'),
+                zoom: 6
+            })
+        });
+        var layerSwitcher = new ol3_layerswitcher_4.LayerSwitcher({
+            tipLabel: 'Layers',
+            openOnMouseOver: true,
+            closeOnMouseOut: true,
+            openOnClick: false,
+            closeOnClick: true,
+            target: null
+        });
+        layerSwitcher.on("show-layer", function (args) {
+            console.log("show layer:", args.layer.get("title"));
+        });
+        layerSwitcher.on("hide-layer", function (args) {
+            console.log("hide layer:", args.layer.get("title"));
+        });
+        map.addControl(layerSwitcher);
     }
     exports.run = run;
 });
@@ -2061,96 +2241,5 @@ define("ol3-layerswitcher/examples/data/webmap2", ["require", "exports"], functi
         "MapItems": null,
         "Slides": null
     };
-});
-define("ol3-layerswitcher/examples/index", ["require", "exports"], function (require, exports) {
-    "use strict";
-    function run() {
-        var l = window.location;
-        var path = "" + l.origin + l.pathname + "?run=ol3-layerswitcher/examples/";
-        var labs = "\n    ags-discovery\n    ags-webmap\n    layerswitcher\n\n    index\n    ";
-        document.writeln("\n    <p>\n    Watch the console output for failed assertions (blank is good).\n    </p>\n    ");
-        document.writeln(labs
-            .split(/ /)
-            .map(function (v) { return v.trim(); })
-            .filter(function (v) { return !!v; })
-            .sort()
-            .map(function (lab) { return "<a href=" + path + lab + "&debug=1>" + lab + "</a>"; })
-            .join("<br/>"));
-    }
-    exports.run = run;
-    ;
-});
-define("ol3-layerswitcher/examples/layerswitcher", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, ol, ol3_layerswitcher_3) {
-    "use strict";
-    function run() {
-        var map = new ol.Map({
-            target: 'map',
-            layers: [
-                new ol.layer.Group({
-                    'title': 'Base maps',
-                    layers: [
-                        new ol.layer.Group({
-                            'title': 'OSM and Water Color',
-                            'label-only': true,
-                            layers: [
-                                new ol.layer.Tile({
-                                    title: 'Water color',
-                                    type: 'base',
-                                    visible: false,
-                                    source: new ol.source.Stamen({
-                                        layer: 'watercolor'
-                                    })
-                                }),
-                                new ol.layer.Tile({
-                                    title: 'OSM',
-                                    type: 'base',
-                                    visible: true,
-                                    source: new ol.source.OSM()
-                                })
-                            ]
-                        })
-                    ]
-                }),
-                new ol.layer.Group({
-                    title: 'Overlays',
-                    layers: [
-                        new ol.layer.Group({
-                            title: "Countries",
-                            layers: [
-                                new ol.layer.Tile({
-                                    title: 'Countries',
-                                    source: new ol.source.TileWMS({
-                                        url: 'http://demo.opengeo.org/geoserver/wms',
-                                        params: { 'LAYERS': 'ne:ne_10m_admin_1_states_provinces_lines_shp' },
-                                        serverType: 'geoserver'
-                                    })
-                                })
-                            ]
-                        })
-                    ]
-                })
-            ],
-            view: new ol.View({
-                center: ol.proj.transform([-85, 35], 'EPSG:4326', 'EPSG:3857'),
-                zoom: 6
-            })
-        });
-        var layerSwitcher = new ol3_layerswitcher_3.LayerSwitcher({
-            tipLabel: 'Layers',
-            openOnMouseOver: true,
-            closeOnMouseOut: true,
-            openOnClick: false,
-            closeOnClick: true,
-            target: null
-        });
-        layerSwitcher.on("show-layer", function (args) {
-            console.log("show layer:", args.layer.get("title"));
-        });
-        layerSwitcher.on("hide-layer", function (args) {
-            console.log("hide layer:", args.layer.get("title"));
-        });
-        map.addControl(layerSwitcher);
-    }
-    exports.run = run;
 });
 //# sourceMappingURL=index.js.map

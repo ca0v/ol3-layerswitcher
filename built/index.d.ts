@@ -72,6 +72,9 @@ declare module "index" {
     import LayerSwitcher = require("ol3-layerswitcher/ol3-layerswitcher");
     export = LayerSwitcher;
 }
+declare module "ol3-layerswitcher/examples/accessibility" {
+    export function run(): void;
+}
 declare module "ol3-layerswitcher/extras/ajax" {
     class Ajax {
         url: string;
@@ -657,8 +660,14 @@ declare module "ol3-layerswitcher/examples/ags-webmap" {
 declare module "ol3-layerswitcher/examples/ags-discovery" {
     export function run(): void;
 }
+declare module "ol3-layerswitcher/examples/index" {
+    export function run(): void;
+}
+declare module "ol3-layerswitcher/examples/layerswitcher" {
+    export function run(): void;
+}
 declare module "ol3-layerswitcher/examples/data/webmap1" {
-    var _default: {
+    const _default: {
         "layers": ({
             "id": number;
             "showLegend": boolean;
@@ -669,12 +678,15 @@ declare module "ol3-layerswitcher/examples/data/webmap1" {
                     "label": string;
                     "isEditable": boolean;
                     "visible": boolean;
+                    stringFieldOption?: undefined;
+                    format?: undefined;
                 } | {
                     "fieldName": string;
                     "label": string;
                     "isEditable": boolean;
                     "visible": boolean;
                     "stringFieldOption": string;
+                    format?: undefined;
                 } | {
                     "fieldName": string;
                     "label": string;
@@ -684,6 +696,7 @@ declare module "ol3-layerswitcher/examples/data/webmap1" {
                         "places": number;
                         "digitSeparator": boolean;
                     };
+                    stringFieldOption?: undefined;
                 })[];
                 "description": string;
                 "showAttachments": boolean;
@@ -699,6 +712,7 @@ declare module "ol3-layerswitcher/examples/data/webmap1" {
         } | {
             "id": number;
             "showLegend": boolean;
+            popupInfo?: undefined;
         })[];
         "minScale": number;
         "maxScale": number;
@@ -706,7 +720,7 @@ declare module "ol3-layerswitcher/examples/data/webmap1" {
     export = _default;
 }
 declare module "ol3-layerswitcher/examples/data/webmap2" {
-    var _default: {
+    const _default: {
         "operationalLayers": {
             "id": string;
             "layerType": string;
@@ -726,6 +740,7 @@ declare module "ol3-layerswitcher/examples/data/webmap2" {
                     "format": {
                         "places": number;
                         "digitSeparator": boolean;
+                        dateFormat?: undefined;
                     };
                     "stringFieldOption": string;
                 } | {
@@ -736,6 +751,8 @@ declare module "ol3-layerswitcher/examples/data/webmap2" {
                     "visible": boolean;
                     "format": {
                         "dateFormat": string;
+                        places?: undefined;
+                        digitSeparator?: undefined;
                     };
                     "stringFieldOption": string;
                 })[];
@@ -791,10 +808,4 @@ declare module "ol3-layerswitcher/examples/data/webmap2" {
         "Slides": any;
     };
     export = _default;
-}
-declare module "ol3-layerswitcher/examples/index" {
-    export function run(): void;
-}
-declare module "ol3-layerswitcher/examples/layerswitcher" {
-    export function run(): void;
 }

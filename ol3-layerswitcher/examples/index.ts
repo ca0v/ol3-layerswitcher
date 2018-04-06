@@ -5,6 +5,7 @@ export function run() {
     ags-discovery
     ags-webmap
     layerswitcher
+    accessibility
 
     index
     `;
