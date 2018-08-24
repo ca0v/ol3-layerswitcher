@@ -1,4 +1,6 @@
-declare module "bower_components/ol3-fun/ol3-fun/common" {
+/// <reference types="jquery" />
+declare module "node_modules/ol3-fun/ol3-fun/common" {
+    export function uuid(): string;
     export function asArray<T extends HTMLInputElement>(list: NodeList): T[];
     export function toggle(e: HTMLElement, className: string, toggle?: boolean): void;
     export function parse<T>(v: string, type: T): T;
@@ -14,7 +16,7 @@ declare module "bower_components/ol3-fun/ol3-fun/common" {
     export function range(n: number): any[];
     export function shuffle<T>(array: T[]): T[];
 }
-declare module "bower_components/ol3-fun/ol3-fun/navigation" {
+declare module "node_modules/ol3-fun/ol3-fun/navigation" {
     import ol = require("openlayers");
     export function zoomToFeature(map: ol.Map, feature: ol.Feature, options?: {
         duration?: number;
@@ -22,15 +24,16 @@ declare module "bower_components/ol3-fun/ol3-fun/navigation" {
         minResolution?: number;
     }): void;
 }
-declare module "bower_components/ol3-fun/ol3-fun/parse-dms" {
+declare module "node_modules/ol3-fun/ol3-fun/parse-dms" {
     export function parse(dmsString: string): number | {
-        [x: number]: number;
+        lon: number;
+        lat: number;
     };
 }
-declare module "bower_components/ol3-fun/index" {
-    import common = require("bower_components/ol3-fun/ol3-fun/common");
-    import navigation = require("bower_components/ol3-fun/ol3-fun/navigation");
-    import dms = require("bower_components/ol3-fun/ol3-fun/parse-dms");
+declare module "node_modules/ol3-fun/index" {
+    import common = require("node_modules/ol3-fun/ol3-fun/common");
+    import navigation = require("node_modules/ol3-fun/ol3-fun/navigation");
+    import dms = require("node_modules/ol3-fun/ol3-fun/parse-dms");
     let index: typeof common & {
         dms: typeof dms;
         navigation: typeof navigation;
@@ -57,15 +60,15 @@ declare module "ol3-layerswitcher/ol3-layerswitcher" {
         element: HTMLElement;
         button: HTMLButtonElement;
         constructor(options?: ILayerSwitcherOptions);
-        private afterCreate(options);
+        private afterCreate;
         isVisible(): boolean;
         showPanel(): void;
         hidePanel(): void;
         renderPanel(): void;
-        private ensureTopVisibleBaseLayerShown();
-        private setVisible(lyr, visible);
-        private renderLayer(lyr, container);
-        private renderLayers(map, elm);
+        private ensureTopVisibleBaseLayerShown;
+        private setVisible;
+        private renderLayer;
+        private renderLayers;
     }
 }
 declare module "index" {
@@ -83,12 +86,12 @@ declare module "ol3-layerswitcher/extras/ajax" {
             use_cors: boolean;
         };
         constructor(url: string);
-        jsonp<T>(args?: any, url?: string): JQueryDeferred<T>;
-        private ajax<T>(method, args?, url?);
-        get<T>(args?: any): JQueryDeferred<T>;
-        post<T>(args?: any): JQueryDeferred<T>;
-        put<T>(args?: any): JQueryDeferred<T>;
-        delete(args?: any): JQueryDeferred<{}>;
+        jsonp<T>(args?: any, url?: string): JQuery.Deferred<T, any, any>;
+        private ajax;
+        get<T>(args?: any): JQuery.Deferred<T, any, any>;
+        post<T>(args?: any): JQuery.Deferred<T, any, any>;
+        put<T>(args?: any): JQuery.Deferred<T, any, any>;
+        delete(args?: any): JQuery.Deferred<{}, any, any>;
     }
     export = Ajax;
 }
@@ -372,15 +375,15 @@ declare module "ol3-layerswitcher/extras/ags-catalog" {
     export class Catalog {
         private ajax;
         constructor(url: string);
-        about(data?: any): JQueryDeferred<CatalogInfo>;
-        aboutFolder(folder: string): JQueryDeferred<CatalogInfo>;
-        aboutFeatureServer(name: string): JQueryDeferred<FeatureServerInfo> & {
+        about(data?: any): JQuery.Deferred<CatalogInfo, any, any>;
+        aboutFolder(folder: string): JQuery.Deferred<CatalogInfo, any, any>;
+        aboutFeatureServer(name: string): JQuery.Deferred<FeatureServerInfo, any, any> & {
             url: string;
         };
-        aboutMapServer(name: string): JQueryDeferred<MapServerInfo> & {
+        aboutMapServer(name: string): JQuery.Deferred<MapServerInfo, any, any> & {
             url: string;
         };
-        aboutLayer(layer: number): JQueryDeferred<FeatureLayerInfo>;
+        aboutLayer(layer: number): JQuery.Deferred<FeatureLayerInfo, any, any>;
     }
 }
 declare module "ol3-layerswitcher/extras/ags-webmap" {
@@ -637,7 +640,7 @@ declare module "ol3-layerswitcher/extras/ags-webmap" {
         }
     }
     export class WebMap {
-        get(url?: string): JQueryDeferred<PortalForArcGis.WebMap>;
+        get(url?: string): JQuery.Deferred<PortalForArcGis.WebMap, any, any>;
     }
 }
 declare module "ol3-layerswitcher/extras/ags-layer-factory" {
@@ -649,7 +652,7 @@ declare module "ol3-layerswitcher/extras/ags-layer-factory" {
         asAgsLayer(layerInfo: PortalForArcGis.OperationalLayer, appInfo: PortalForArcGis.WebMap): any;
         asArcGISTiledMapServiceLayer(layerInfo: PortalForArcGis.BaseMapLayer, appInfo?: PortalForArcGis.WebMap): ol.layer.Tile;
         asFeatureCollection(layerInfo: PortalForArcGis.OperationalLayer, appInfo?: PortalForArcGis.WebMap): any;
-        private asEsriGeometryPolygon(featureSet);
+        private asEsriGeometryPolygon;
         asArcGISFeatureLayer(layerInfo: PortalForArcGis.OperationalLayer, appInfo?: PortalForArcGis.WebMap): ol.layer.Tile;
     }
     export = AgsLayerFactory;
@@ -678,15 +681,15 @@ declare module "ol3-layerswitcher/examples/data/webmap1" {
                     "label": string;
                     "isEditable": boolean;
                     "visible": boolean;
-                    stringFieldOption?: undefined;
-                    format?: undefined;
+                    "stringFieldOption"?: undefined;
+                    "format"?: undefined;
                 } | {
                     "fieldName": string;
                     "label": string;
                     "isEditable": boolean;
                     "visible": boolean;
                     "stringFieldOption": string;
-                    format?: undefined;
+                    "format"?: undefined;
                 } | {
                     "fieldName": string;
                     "label": string;
@@ -696,7 +699,7 @@ declare module "ol3-layerswitcher/examples/data/webmap1" {
                         "places": number;
                         "digitSeparator": boolean;
                     };
-                    stringFieldOption?: undefined;
+                    "stringFieldOption"?: undefined;
                 })[];
                 "description": string;
                 "showAttachments": boolean;
@@ -712,7 +715,7 @@ declare module "ol3-layerswitcher/examples/data/webmap1" {
         } | {
             "id": number;
             "showLegend": boolean;
-            popupInfo?: undefined;
+            "popupInfo"?: undefined;
         })[];
         "minScale": number;
         "maxScale": number;
@@ -720,7 +723,7 @@ declare module "ol3-layerswitcher/examples/data/webmap1" {
     export = _default;
 }
 declare module "ol3-layerswitcher/examples/data/webmap2" {
-    const _default: {
+    const _default_1: {
         "operationalLayers": {
             "id": string;
             "layerType": string;
@@ -740,7 +743,7 @@ declare module "ol3-layerswitcher/examples/data/webmap2" {
                     "format": {
                         "places": number;
                         "digitSeparator": boolean;
-                        dateFormat?: undefined;
+                        "dateFormat"?: undefined;
                     };
                     "stringFieldOption": string;
                 } | {
@@ -751,8 +754,8 @@ declare module "ol3-layerswitcher/examples/data/webmap2" {
                     "visible": boolean;
                     "format": {
                         "dateFormat": string;
-                        places?: undefined;
-                        digitSeparator?: undefined;
+                        "places"?: undefined;
+                        "digitSeparator"?: undefined;
                     };
                     "stringFieldOption": string;
                 })[];
@@ -807,5 +810,5 @@ declare module "ol3-layerswitcher/examples/data/webmap2" {
         "MapItems": any;
         "Slides": any;
     };
-    export = _default;
+    export = _default_1;
 }
