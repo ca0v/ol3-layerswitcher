@@ -2,7 +2,7 @@
     "compilerOptions": {
         "module": "amd",
         "target": "es5",
-        "declaration": true,
+        "declaration": false,
         "noImplicitAny": false,
         "removeComments": true,
         "outFile": "built/index.max.js",

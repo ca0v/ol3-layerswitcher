@@ -1,5 +1,5 @@
 import ol = require("openlayers");
-import { asArray, defaults, toggle } from "ol3-fun/index";
+import { asArray, defaults, toggle, uuid } from "ol3-fun/index";
 
 /**
  * Creates an array containing all sub-layers
@@ -13,19 +13,6 @@ function allLayers(lyr: ol.Map | ol.layer.Group) {
         }
     });
     return result;
-}
-
-/**
- * Generate a UUID
- * @returns UUID
- *
- * Adapted from http://stackoverflow.com/a/2117523/526860
- */
-function uuid() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
 }
 
 export interface ILayerSwitcherOptions {
