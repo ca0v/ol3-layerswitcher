@@ -7,6 +7,7 @@ All layers should have a `title` property and base layers should have a `type` p
 ## Examples
 
 * [master](https://rawgit.com/ca0v/ol3-layerswitcher/master/rawgit.html)
+* [5.1.3](https://rawgit.com/ca0v/ol3-layerswitcher/v5.1.3/rawgit.html)
 * [4.0.2](https://rawgit.com/ca0v/ol3-layerswitcher/v4.0.2/rawgit.html)
 * [3.20.1](https://rawgit.com/ca0v/ol3-layerswitcher/v3.20.1/rawgit.html)
 * [2.0.4](https://cdn.rawgit.com/ca0v/ol3-layerswitcher/v2.0.4/rawgit.html)
@@ -19,5 +20,4 @@ All layers should have a `title` property and base layers should have a `type` p
 
 ## Consume
 
-* `typings install ol3-layerswitcher=github:ca0v/ol3-layerswitcher/built/index.d.ts#v4.0.2 --global --save`
-* `bower install ol3-layerswitcher=git://github.com/ca0v/ol3-layerswitcher.git#v4.0.2 --save`
+* `npm install https://github.com/ca0v/ol3-layerswitcher/tarball/v5.1.3`
