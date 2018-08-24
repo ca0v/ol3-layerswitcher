@@ -39,8 +39,8 @@ export function run() {
                             new ol.layer.Tile({
                                 title: 'Countries',
                                 source: new ol.source.TileWMS({
-                                    url: 'http://demo.opengeo.org/geoserver/wms',
-                                    params: { 'LAYERS': 'ne:ne_10m_admin_1_states_provinces_lines_shp' },
+                                    url: 'http://localhost:8080/geoserver/IPS860/wms',
+                                    params: { 'LAYERS': 'IPS860:addresses' },
                                     serverType: 'geoserver'
                                 })
                             })

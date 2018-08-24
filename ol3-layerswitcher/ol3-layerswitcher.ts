@@ -1,5 +1,5 @@
 import ol = require("openlayers");
-import { asArray, defaults, toggle } from "ol3-fun";
+import { asArray, defaults, toggle } from "ol3-fun/index";
 
 /**
  * Creates an array containing all sub-layers

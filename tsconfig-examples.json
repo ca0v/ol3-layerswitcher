@@ -11,6 +11,7 @@
         "baseUrl": "node_modules"
     },
     "include": [
-        "index.ts"
+        "index.ts",
+        "ol3-layerswitcher/examples"
     ]
 }

@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <title>OpenLayers 3 - LayerSwitcher</title>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/openlayers/4.0.1/ol.css"></link>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/openlayers/4.0.1/ol.css"/>
     <link rel="stylesheet" href="./built/css/ol3-layerswitcher.css" />
     <style>
         html,
@@ -57,7 +57,7 @@
                 }
             ],
 
-            deps: ['built/index'],
+            deps: [debug ? 'built/index.max' : "built/index"],
             callback: function () {
                 require([getParameterByName("run") || "ol3-layerswitcher/examples/index"], function (example) { example.run(); });
             }
