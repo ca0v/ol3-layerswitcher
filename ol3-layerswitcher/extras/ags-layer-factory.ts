@@ -1,5 +1,7 @@
 import ol = require("openlayers");
-import {PortalForArcGis, WebMap} from "./ags-webmap";
+import { olx } from "openlayers";
+
+import { PortalForArcGis } from "./ags-webmap";
 
 /**
  * scale is units per pixel assuming a pixel is a certain size (0.028 cm or 1/90 inches)

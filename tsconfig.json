@@ -7,12 +7,11 @@
         "removeComments": true,
         "outFile": "built/index.js",
         "sourceMap": true,
-        "moduleResolution": "node",
-        "baseUrl": "./bower_components"
+        "moduleResolution": "node"
     },
     "include": [
         "index.ts",
-        "ol3-layerswitcher",
-        "typings/index.d.ts"
+        "./ol3-layerswitcher",
+        "./node_modules/ol3-fun/index.ts"
     ]
 }
