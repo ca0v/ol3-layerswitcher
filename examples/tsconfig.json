@@ -5,13 +5,13 @@
         "declaration": false,
         "noImplicitAny": false,
         "removeComments": true,
-        "outFile": "built/index.max.js",
+        "outFile": "../built/examples.max.js",
         "sourceMap": true,
         "moduleResolution": "classic",
         "baseUrl": "node_modules"
     },
     "include": [
         "index.ts",
-        "ol3-layerswitcher/examples"
+        "**/*.ts"
     ]
 }

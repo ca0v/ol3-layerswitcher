@@ -1,9 +1,9 @@
 import ol = require("openlayers");
-import { LayerSwitcher } from "../ol3-layerswitcher";
-import AgsDiscovery = require("../extras/ags-catalog");
+import { LayerSwitcher } from "../ol3-layerswitcher/ol3-layerswitcher";
+import AgsDiscovery = require("../ol3-layerswitcher/extras/ags-catalog");
 import WebMap = require("./ags-webmap");
 import proj4 = require("proj4");
-import AgsLayerFactory = require("../extras/ags-layer-factory");
+import AgsLayerFactory = require("../ol3-layerswitcher/extras/ags-layer-factory");
 
 export function run() {
     ol.proj.setProj4(proj4);

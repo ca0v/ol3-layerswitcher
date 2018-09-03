@@ -1,7 +1,7 @@
 import ol = require("openlayers");
-import { LayerSwitcher } from "../ol3-layerswitcher";
-import WebMap = require("../extras/ags-webmap");
-import AgsLayerFactory = require("../extras/ags-layer-factory");
+import { LayerSwitcher } from "../ol3-layerswitcher/ol3-layerswitcher";
+import WebMap = require("../ol3-layerswitcher/extras/ags-webmap");
+import AgsLayerFactory = require("../ol3-layerswitcher/extras/ags-layer-factory");
 
 export function run() {
     /**
