@@ -30,19 +30,19 @@ export function run() {
         openOnMouseOver: true
     });
 
-    layerSwitcher.on("show-layer", (args: { layer: ol.layer.Base }) => {
+    layerSwitcher.on("show-layer", (args: ol.events.Event & { layer: ol.layer.Base }) => {
         console.log("show layer:", args.layer.get("title"));
         if (args.layer.get("extent")) {
             let view = map.getView();
             let extent = <ol.Extent>args.layer.get("extent");
             let currentExtent = view.calculateExtent(map.getSize());
             if (!ol.extent.intersects(currentExtent, extent)) {
-                view.fit(extent, map.getSize());
+                view.fit(extent, { size: map.getSize() });
             }
         }
     });
 
-    layerSwitcher.on("hide-layer", (args: { layer: ol.layer.Base }) => {
+    layerSwitcher.on("hide-layer", (args: ol.events.Event & { layer: ol.layer.Base }) => {
         console.log("hide layer:", args.layer.get("title"));
     });
 

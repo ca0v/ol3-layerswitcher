@@ -64,11 +64,11 @@ export function run() {
         target: null
     });
 
-    layerSwitcher.on("show-layer", (args: { layer: ol.layer.Base }) => {
+    layerSwitcher.on("show-layer", (args: ol.events.Event & { layer: ol.layer.Base }) => {
         console.log("show layer:", args.layer.get("title"));
     });
 
-    layerSwitcher.on("hide-layer", (args: { layer: ol.layer.Base }) => {
+    layerSwitcher.on("hide-layer", (args: ol.events.Event & { layer: ol.layer.Base }) => {
         console.log("hide layer:", args.layer.get("title"));
     });
 

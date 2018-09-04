@@ -1,5 +1,6 @@
 import ol = require("openlayers");
 import { asArray, defaults, toggle, uuid } from "ol3-fun/index";
+import { GlobalObject } from "openlayers";
 
 /**
  * Creates an array containing all sub-layers
@@ -35,7 +36,12 @@ const DEFAULT_OPTIONS: ILayerSwitcherOptions = {
     target: <HTMLElement>null
 };
 
-export class LayerSwitcher extends ol.control.Control {
+export interface ILayerSwitcher {
+    on(type: "show-layer", listener: any): any;
+    on(type: (string | string[]), listener: ol.EventsListenerFunctionType, opt_this?: GlobalObject): (ol.EventsKey | ol.EventsKey[]);
+}
+
+export class LayerSwitcher extends ol.control.Control implements ILayerSwitcher {
 
     private state: Array<{ container: HTMLElement; input: HTMLInputElement; layer: ol.layer.Base }>;
     private unwatch: Array<() => void>;
@@ -183,7 +189,7 @@ export class LayerSwitcher extends ol.control.Control {
     /**
      * Render all layers that are children of a group.
      */
-    private renderLayer(lyr: ol.layer.Base, container: HTMLElement) {
+    private renderLayer(lyr: ol.layer.Base & {getVisible: Function}, container: HTMLElement) {
         let result: HTMLInputElement;
 
         let li = document.createElement('li');

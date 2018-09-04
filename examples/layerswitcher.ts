@@ -64,12 +64,13 @@ export function run() {
         target: null
     });
 
-    layerSwitcher.on("show-layer", (args: { layer: ol.layer.Base }) => {
+    layerSwitcher.on("show-layer", (args: any) => {
         console.log("show layer:", args.layer.get("title"));
     });
 
-    layerSwitcher.on("hide-layer", (args: { layer: ol.layer.Base }) => {
+    layerSwitcher.on("hide-layer", (args: any) => {
         console.log("hide layer:", args.layer.get("title"));
+        return true;
     });
 
     map.addControl(layerSwitcher);

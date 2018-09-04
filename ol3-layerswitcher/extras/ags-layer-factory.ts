@@ -2,6 +2,7 @@ import ol = require("openlayers");
 import { olx } from "openlayers";
 
 import { PortalForArcGis } from "./ags-webmap";
+import { LayerTileOptions } from "./LayerTileOptions";
 
 /**
  * scale is units per pixel assuming a pixel is a certain size (0.028 cm or 1/90 inches)
@@ -12,6 +13,12 @@ function asRes(scale: number, dpi = 90.71428571428572) {
     const inchesPerMeter = (inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]); //39.37007874015748;
     const dotsPerUnit = dpi * inchesPerMeter;
     return scale / dotsPerUnit;
+}
+
+class VectorLayer extends ol.layer.Vector {
+    constructor(options: olx.layer.VectorOptions & { title: string }) {
+        super(options);
+    }
 }
 
 class AgsLayerFactory {
@@ -55,14 +62,14 @@ class AgsLayerFactory {
 
         // doesn't seem to care about the projection
         let srs = layerInfo.spatialReference || appInfo.spatialReference;
-        let srsCode = srs && srs.latestWkid || "3857";
+        let srsCode = !srs ? "3857" : (typeof srs === "string") ? srs : (srs.latestWkid || srs.wkid);
 
         let source = new ol.source.XYZ({
             url: layerInfo.url + '/tile/{z}/{y}/{x}',
             projection: `EPSG:${srsCode}`
         });
 
-        let tileOptions: olx.layer.TileOptions = {
+        let tileOptions: LayerTileOptions = {
             id: layerInfo.id,
             title: layerInfo.title || layerInfo.id,
             type: 'base',
@@ -80,7 +87,7 @@ class AgsLayerFactory {
      */
     asFeatureCollection(layerInfo: PortalForArcGis.OperationalLayer, appInfo?: PortalForArcGis.WebMap) {
         let source = new ol.source.Vector();
-        let layer = new ol.layer.Vector({
+        let layer = new VectorLayer({
             title: layerInfo.id,
             source: source
         });
@@ -136,7 +143,7 @@ class AgsLayerFactory {
             }
         });
 
-        let tileOptions: olx.layer.TileOptions = {
+        let tileOptions: LayerTileOptions = {
             id: layerInfo.id,
             title: layerInfo.title,
             visible: false,

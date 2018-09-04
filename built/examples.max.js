@@ -11,12 +11,12 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-define("ol3-layerswitcher/examples/index", ["require", "exports"], function (require, exports) {
+define("examples/index", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         var l = window.location;
-        var path = "" + l.origin + l.pathname + "?run=ol3-layerswitcher/examples/";
+        var path = "" + l.origin + l.pathname + "?run=examples/";
         var labs = "\n    ags-discovery\n    ags-webmap\n    layerswitcher\n    accessibility\n\n    index\n    ";
         document.writeln("\n    <p>\n    Watch the console output for failed assertions (blank is good).\n    </p>\n    ");
         document.writeln(labs
@@ -30,7 +30,7 @@ define("ol3-layerswitcher/examples/index", ["require", "exports"], function (req
     exports.run = run;
     ;
 });
-define("ol3-fun/ol3-fun/common", ["require", "exports"], function (require, exports) {
+define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function uuid() {
@@ -196,7 +196,7 @@ define("ol3-fun/ol3-fun/common", ["require", "exports"], function (require, expo
     }
     exports.shuffle = shuffle;
 });
-define("ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquery", "ol3-fun/ol3-fun/common"], function (require, exports, ol, $, common_1) {
+define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, $, common_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function zoomToFeature(map, feature, options) {
@@ -242,7 +242,7 @@ define("ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquer
     }
     exports.zoomToFeature = zoomToFeature;
 });
-define("ol3-fun/ol3-fun/parse-dms", ["require", "exports"], function (require, exports) {
+define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function decDegFromMatch(m) {
@@ -320,7 +320,7 @@ define("ol3-fun/ol3-fun/parse-dms", ["require", "exports"], function (require, e
     }
     exports.parse = parse;
 });
-define("ol3-fun/index", ["require", "exports", "ol3-fun/ol3-fun/common", "ol3-fun/ol3-fun/navigation", "ol3-fun/ol3-fun/parse-dms"], function (require, exports, common, navigation, dms) {
+define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms"], function (require, exports, common, navigation, dms) {
     "use strict";
     var index = common.defaults(common, {
         dms: dms,
@@ -328,7 +328,7 @@ define("ol3-fun/index", ["require", "exports", "ol3-fun/ol3-fun/common", "ol3-fu
     });
     return index;
 });
-define("ol3-layerswitcher/ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers", "ol3-fun/index"], function (require, exports, ol, index_1) {
+define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers", "node_modules/ol3-fun/index"], function (require, exports, ol, index_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function allLayers(lyr) {
@@ -525,7 +525,7 @@ define("ol3-layerswitcher/ol3-layerswitcher/ol3-layerswitcher", ["require", "exp
     }(ol.control.Control));
     exports.LayerSwitcher = LayerSwitcher;
 });
-define("ol3-layerswitcher/examples/accessibility", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, ol, ol3_layerswitcher_1) {
+define("examples/accessibility", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, ol, ol3_layerswitcher_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
@@ -599,7 +599,7 @@ define("ol3-layerswitcher/examples/accessibility", ["require", "exports", "openl
     }
     exports.run = run;
 });
-define("ol3-layerswitcher/ol3-layerswitcher/extras/ajax", ["require", "exports", "jquery"], function (require, exports, $) {
+define("ol3-layerswitcher/extras/ajax", ["require", "exports", "jquery"], function (require, exports, $) {
     "use strict";
     var Ajax = (function () {
         function Ajax(url) {
@@ -678,7 +678,7 @@ define("ol3-layerswitcher/ol3-layerswitcher/extras/ajax", ["require", "exports",
     }());
     return Ajax;
 });
-define("ol3-layerswitcher/ol3-layerswitcher/extras/ags-catalog", ["require", "exports", "ol3-layerswitcher/ol3-layerswitcher/extras/ajax"], function (require, exports, Ajax) {
+define("ol3-layerswitcher/extras/ags-catalog", ["require", "exports", "ol3-layerswitcher/extras/ajax"], function (require, exports, Ajax) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function defaults(a) {
@@ -733,7 +733,7 @@ define("ol3-layerswitcher/ol3-layerswitcher/extras/ags-catalog", ["require", "ex
     }());
     exports.Catalog = Catalog;
 });
-define("ol3-layerswitcher/ol3-layerswitcher/extras/ags-webmap", ["require", "exports", "ol3-layerswitcher/ol3-layerswitcher/extras/ajax"], function (require, exports, Ajax) {
+define("ol3-layerswitcher/extras/ags-webmap", ["require", "exports", "ol3-layerswitcher/extras/ajax"], function (require, exports, Ajax) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var DEFAULT_URLS = [
@@ -752,7 +752,11 @@ define("ol3-layerswitcher/ol3-layerswitcher/extras/ags-webmap", ["require", "exp
     }());
     exports.WebMap = WebMap;
 });
-define("ol3-layerswitcher/ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "openlayers"], function (require, exports, ol) {
+define("ol3-layerswitcher/extras/LayerTileOptions", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
+define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
     function asRes(scale, dpi) {
         if (dpi === void 0) { dpi = 90.71428571428572; }
@@ -761,6 +765,13 @@ define("ol3-layerswitcher/ol3-layerswitcher/extras/ags-layer-factory", ["require
         var dotsPerUnit = dpi * inchesPerMeter;
         return scale / dotsPerUnit;
     }
+    var VectorLayer = (function (_super) {
+        __extends(VectorLayer, _super);
+        function VectorLayer(options) {
+            return _super.call(this, options) || this;
+        }
+        return VectorLayer;
+    }(ol.layer.Vector));
     var AgsLayerFactory = (function () {
         function AgsLayerFactory() {
         }
@@ -798,7 +809,7 @@ define("ol3-layerswitcher/ol3-layerswitcher/extras/ags-layer-factory", ["require
         };
         AgsLayerFactory.prototype.asArcGISTiledMapServiceLayer = function (layerInfo, appInfo) {
             var srs = layerInfo.spatialReference || appInfo.spatialReference;
-            var srsCode = srs && srs.latestWkid || "3857";
+            var srsCode = !srs ? "3857" : (typeof srs === "string") ? srs : (srs.latestWkid || srs.wkid);
             var source = new ol.source.XYZ({
                 url: layerInfo.url + '/tile/{z}/{y}/{x}',
                 projection: "EPSG:" + srsCode
@@ -816,7 +827,7 @@ define("ol3-layerswitcher/ol3-layerswitcher/extras/ags-layer-factory", ["require
         AgsLayerFactory.prototype.asFeatureCollection = function (layerInfo, appInfo) {
             var _this = this;
             var source = new ol.source.Vector();
-            var layer = new ol.layer.Vector({
+            var layer = new VectorLayer({
                 title: layerInfo.id,
                 source: source
             });
@@ -877,10 +888,11 @@ define("ol3-layerswitcher/ol3-layerswitcher/extras/ags-layer-factory", ["require
     }());
     return AgsLayerFactory;
 });
-define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/ol3-layerswitcher/extras/ags-webmap", "ol3-layerswitcher/ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_2, WebMap, AgsLayerFactory) {
+define("examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-catalog", "proj4", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_2, AgsDiscovery, proj4, AgsLayerFactory) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
+        ol.proj.proj4.register(proj4);
         function asRes(scale, dpi) {
             if (dpi === void 0) { dpi = 90.71428571428572; }
             var inchesPerFoot = 12.0;
@@ -888,6 +900,7 @@ define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlaye
             var dotsPerUnit = dpi * inchesPerMeter;
             return scale / dotsPerUnit;
         }
+        proj4.defs("EPSG:4269", "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs");
         var agsLayerFactory = new AgsLayerFactory();
         var map = new ol.Map({
             target: 'map',
@@ -907,89 +920,7 @@ define("ol3-layerswitcher/examples/ags-webmap", ["require", "exports", "openlaye
                 var extent = args.layer.get("extent");
                 var currentExtent = view.calculateExtent(map.getSize());
                 if (!ol.extent.intersects(currentExtent, extent)) {
-                    view.fit(extent, map.getSize());
-                }
-            }
-        });
-        layerSwitcher.on("hide-layer", function (args) {
-            console.log("hide layer:", args.layer.get("title"));
-        });
-        map.addControl(layerSwitcher);
-        function webmap(options) {
-            var webmap = new WebMap.WebMap();
-            var webmapGroup = new ol.layer.Group({
-                title: "WebMap",
-                visible: false,
-                layers: []
-            });
-            map.addLayer(webmapGroup);
-            options.url = options.url || "https://www.arcgis.com/sharing/rest/content/items/" + options.appid + "/data?f=json";
-            webmap.get(options.url).then(function (result) {
-                if (result.baseMap) {
-                    var baseLayers_1 = new ol.layer.Group({
-                        title: "Basemap Layers",
-                        visible: false,
-                        layers: []
-                    });
-                    webmapGroup.getLayers().push(baseLayers_1);
-                    result.baseMap.baseMapLayers.forEach(function (l) {
-                        var opLayer = agsLayerFactory.asArcGISTiledMapServiceLayer(l, result);
-                        baseLayers_1.getLayers().push(opLayer);
-                    });
-                }
-                if (result.operationalLayers) {
-                    var opLayers_1 = new ol.layer.Group({
-                        title: "Operational Layers",
-                        visible: false,
-                        layers: []
-                    });
-                    webmapGroup.getLayers().push(opLayers_1);
-                    result.operationalLayers.forEach(function (l) {
-                        var opLayer = agsLayerFactory.asAgsLayer(l, result);
-                        opLayers_1.getLayers().push(opLayer);
-                    });
-                }
-            });
-        }
-        webmap({
-            url: "http://infor1.maps.arcgis.com/sharing/rest/content/items/313b7327133f4802affee46893b4bec7/data?f=json"
-        });
-    }
-    exports.run = run;
-});
-define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/ol3-layerswitcher/extras/ags-catalog", "proj4", "ol3-layerswitcher/ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_3, AgsDiscovery, proj4, AgsLayerFactory) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    function run() {
-        ol.proj.setProj4(proj4);
-        function asRes(scale, dpi) {
-            if (dpi === void 0) { dpi = 90.71428571428572; }
-            var inchesPerFoot = 12.0;
-            var inchesPerMeter = (inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]);
-            var dotsPerUnit = dpi * inchesPerMeter;
-            return scale / dotsPerUnit;
-        }
-        proj4.defs("EPSG:4269", "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs");
-        var agsLayerFactory = new AgsLayerFactory();
-        var map = new ol.Map({
-            target: 'map',
-            layers: [],
-            view: new ol.View({
-                center: ol.proj.transform([-85, 35], 'EPSG:4326', 'EPSG:3857'),
-                zoom: 6
-            })
-        });
-        var layerSwitcher = new ol3_layerswitcher_3.LayerSwitcher({
-            openOnMouseOver: true
-        });
-        layerSwitcher.on("show-layer", function (args) {
-            console.log("show layer:", args.layer.get("title"));
-            if (args.layer.get("extent")) {
-                var view = map.getView();
-                var extent = args.layer.get("extent");
-                var currentExtent = view.calculateExtent(map.getSize());
-                if (!ol.extent.intersects(currentExtent, extent)) {
-                    view.fit(extent, map.getSize());
+                    view.fit(extent, { size: map.getSize() });
                 }
             }
         });
@@ -1109,7 +1040,87 @@ define("ol3-layerswitcher/examples/ags-discovery", ["require", "exports", "openl
     }
     exports.run = run;
 });
-define("ol3-layerswitcher/examples/layerswitcher", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, ol, ol3_layerswitcher_4) {
+define("examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-webmap", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_3, WebMap, AgsLayerFactory) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function run() {
+        function asRes(scale, dpi) {
+            if (dpi === void 0) { dpi = 90.71428571428572; }
+            var inchesPerFoot = 12.0;
+            var inchesPerMeter = (inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]);
+            var dotsPerUnit = dpi * inchesPerMeter;
+            return scale / dotsPerUnit;
+        }
+        var agsLayerFactory = new AgsLayerFactory();
+        var map = new ol.Map({
+            target: 'map',
+            layers: [],
+            view: new ol.View({
+                center: ol.proj.transform([-85, 35], 'EPSG:4326', 'EPSG:3857'),
+                zoom: 6
+            })
+        });
+        var layerSwitcher = new ol3_layerswitcher_3.LayerSwitcher({
+            openOnMouseOver: true
+        });
+        layerSwitcher.on("show-layer", function (args) {
+            console.log("show layer:", args.layer.get("title"));
+            if (args.layer.get("extent")) {
+                var view = map.getView();
+                var extent = args.layer.get("extent");
+                var currentExtent = view.calculateExtent(map.getSize());
+                if (!ol.extent.intersects(currentExtent, extent)) {
+                    view.fit(extent, { size: map.getSize() });
+                }
+            }
+        });
+        layerSwitcher.on("hide-layer", function (args) {
+            console.log("hide layer:", args.layer.get("title"));
+        });
+        map.addControl(layerSwitcher);
+        function webmap(options) {
+            var webmap = new WebMap.WebMap();
+            var webmapGroup = new ol.layer.Group({
+                title: "WebMap",
+                visible: false,
+                layers: []
+            });
+            map.addLayer(webmapGroup);
+            options.url = options.url || "https://www.arcgis.com/sharing/rest/content/items/" + options.appid + "/data?f=json";
+            webmap.get(options.url).then(function (result) {
+                if (result.baseMap) {
+                    var baseLayers_1 = new ol.layer.Group({
+                        title: "Basemap Layers",
+                        visible: false,
+                        layers: []
+                    });
+                    webmapGroup.getLayers().push(baseLayers_1);
+                    result.baseMap.baseMapLayers.forEach(function (l) {
+                        var opLayer = agsLayerFactory.asArcGISTiledMapServiceLayer(l, result);
+                        baseLayers_1.getLayers().push(opLayer);
+                    });
+                }
+                if (result.operationalLayers) {
+                    var opLayers_1 = new ol.layer.Group({
+                        title: "Operational Layers",
+                        visible: false,
+                        layers: []
+                    });
+                    webmapGroup.getLayers().push(opLayers_1);
+                    result.operationalLayers.forEach(function (l) {
+                        var opLayer = agsLayerFactory.asAgsLayer(l, result);
+                        opLayers_1.getLayers().push(opLayer);
+                    });
+                }
+            });
+        }
+        webmap({
+            url: "http://infor1.maps.arcgis.com/sharing/rest/content/items/313b7327133f4802affee46893b4bec7/data?f=json"
+        });
+    }
+    exports.run = run;
+});
+define("examples/layerswitcher", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, ol, ol3_layerswitcher_4) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
@@ -1178,12 +1189,13 @@ define("ol3-layerswitcher/examples/layerswitcher", ["require", "exports", "openl
         });
         layerSwitcher.on("hide-layer", function (args) {
             console.log("hide layer:", args.layer.get("title"));
+            return true;
         });
         map.addControl(layerSwitcher);
     }
     exports.run = run;
 });
-define("ol3-layerswitcher/examples/data/webmap1", ["require", "exports"], function (require, exports) {
+define("examples/data/webmap1", ["require", "exports"], function (require, exports) {
     "use strict";
     return {
         "layers": [
@@ -1847,7 +1859,7 @@ define("ol3-layerswitcher/examples/data/webmap1", ["require", "exports"], functi
         "maxScale": 72223
     };
 });
-define("ol3-layerswitcher/examples/data/webmap2", ["require", "exports"], function (require, exports) {
+define("examples/data/webmap2", ["require", "exports"], function (require, exports) {
     "use strict";
     return {
         "operationalLayers": [

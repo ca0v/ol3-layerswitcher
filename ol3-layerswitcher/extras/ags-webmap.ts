@@ -179,7 +179,7 @@ export namespace PortalForArcGis {
     }
 
     export interface Geometry {
-        rings: number[][][];
+        rings: [number, number][][];
         spatialReference: SpatialReference;
     }
 
@@ -218,6 +218,7 @@ export namespace PortalForArcGis {
     }
 
     export interface BaseMapLayer {
+        spatialReference?: string | SpatialReference;
         isReference?: boolean;
         title: string;
         id: string;

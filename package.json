@@ -35,6 +35,7 @@
   "homepage": "https://github.com/ca0v/ol3-layerswitcher#readme",
   "devDependencies": {
     "@types/jquery": "^3.3.6",
+    "@types/mocha": "^5.2.5",
     "@types/ol": "^4.6.2",
     "@types/proj4": "^2.3.4",
     "@types/requirejs": "^2.1.31",

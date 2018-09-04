@@ -1,12 +1,13 @@
 import ol = require("openlayers");
 import { LayerSwitcher } from "../ol3-layerswitcher/ol3-layerswitcher";
+import { olx } from "openlayers";
 import AgsDiscovery = require("../ol3-layerswitcher/extras/ags-catalog");
-import WebMap = require("./ags-webmap");
 import proj4 = require("proj4");
 import AgsLayerFactory = require("../ol3-layerswitcher/extras/ags-layer-factory");
+import { LayerTileOptions } from "../ol3-layerswitcher/extras/LayerTileOptions";
 
 export function run() {
-    ol.proj.setProj4(proj4);
+    (<any>ol.proj).proj4.register(proj4);
 
     /**
      * scale is units per pixel assuming a pixel is a certain size (0.028 cm or 1/90 inches)
@@ -36,19 +37,19 @@ export function run() {
         openOnMouseOver: true
     });
 
-    layerSwitcher.on("show-layer", (args: { layer: ol.layer.Base }) => {
+    layerSwitcher.on("show-layer", (args: ol.events.Event & { layer: ol.layer.Base }) => {
         console.log("show layer:", args.layer.get("title"));
         if (args.layer.get("extent")) {
             let view = map.getView();
             let extent = <ol.Extent>args.layer.get("extent");
             let currentExtent = view.calculateExtent(map.getSize());
             if (!ol.extent.intersects(currentExtent, extent)) {
-                view.fit(extent, map.getSize());
+                view.fit(extent, { size: map.getSize() });
             }
         }
     });
 
-    layerSwitcher.on("hide-layer", (args: { layer: ol.layer.Base }) => {
+    layerSwitcher.on("hide-layer", (args: ol.events.Event & { layer: ol.layer.Base }) => {
         console.log("hide layer:", args.layer.get("title"));
     });
 
@@ -117,7 +118,7 @@ export function run() {
                                             inSrs = `EPSG:${s.spatialReference.wkid}`;
                                         }
                                         if (s.spatialReference.wkt) {
-                                            inSrs = proj4.Proj(s.spatialReference.wkt).srsCode;
+                                            inSrs = (<any>proj4.Proj(s.spatialReference.wkt)).srsCode;
                                             proj4.defs(inSrs, s.spatialReference.wkt);
                                         }
                                     }
@@ -145,11 +146,11 @@ export function run() {
                                                 }
                                             });
 
-                                            let tileOptions: olx.layer.TileOptions = {
+                                            let tileOptions: LayerTileOptions = {
                                                 id: `${serviceInfo.name}/${layerInfo.id}`,
                                                 title: layerInfo.name,
                                                 visible: false,
-                                                extent: extent,
+                                                extent: extent as [number, number, number, number],
                                                 source: source
                                             };
 
