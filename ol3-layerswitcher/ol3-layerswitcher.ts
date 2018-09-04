@@ -26,7 +26,7 @@ export interface ILayerSwitcherOptions {
     target?: HTMLElement;
 }
 
-const DEFAULT_OPTIONS: ILayerSwitcherOptions = {
+export const DEFAULT_OPTIONS: ILayerSwitcherOptions = {
     tipLabel: 'Layers',
     openOnMouseOver: false,
     closeOnMouseOut: false,
@@ -36,6 +36,7 @@ const DEFAULT_OPTIONS: ILayerSwitcherOptions = {
     target: <HTMLElement>null
 };
 
+// doesn't work as expected...delete this, or typescript has a way of exposing typings of a class?
 export interface ILayerSwitcher {
     on(type: "show-layer", listener: any): any;
     on(type: (string | string[]), listener: ol.EventsListenerFunctionType, opt_this?: GlobalObject): (ol.EventsKey | ol.EventsKey[]);

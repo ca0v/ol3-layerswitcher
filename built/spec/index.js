@@ -11,6 +11,36 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+define("tests/base", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function describe(title, cb) {
+        console.log(title || "undocumented test group");
+        return window.describe(title, cb);
+    }
+    exports.describe = describe;
+    function it(title, cb) {
+        console.log(title || "undocumented test");
+        return window.it(title, cb);
+    }
+    exports.it = it;
+    function should(result, message) {
+        console.log(message || "undocumented assertion");
+        if (!result)
+            throw message;
+    }
+    exports.should = should;
+    function shouldEqual(a, b, message) {
+        if (a != b)
+            console.warn("\"" + a + "\" <> \"" + b + "\"");
+        should(a == b, message);
+    }
+    exports.shouldEqual = shouldEqual;
+    function stringify(o) {
+        return JSON.stringify(o, null, "\t");
+    }
+    exports.stringify = stringify;
+});
 define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -506,8 +536,31 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
     }(ol.control.Control));
     exports.LayerSwitcher = LayerSwitcher;
 });
-define("index", ["require", "exports", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, LayerSwitcher) {
+define("tests/spec/layerswitcher", ["require", "exports", "tests/base", "mocha", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, base_1, mocha_1, ol3_layerswitcher_1) {
     "use strict";
-    return LayerSwitcher;
+    Object.defineProperty(exports, "__esModule", { value: true });
+    mocha_1.describe("LayerSwitcher Tests", function () {
+        mocha_1.it("LayerSwitcher", function () {
+            base_1.should(!!ol3_layerswitcher_1.LayerSwitcher, "LayerSwitcher");
+        });
+        mocha_1.it("DEFAULT_OPTIONS", function () {
+            var options = ol3_layerswitcher_1.DEFAULT_OPTIONS;
+            checkDefaultInputOptions(options);
+        });
+    });
+    function checkDefaultInputOptions(options) {
+        base_1.should(!!options, "options");
+        base_1.shouldEqual(options.className, "layer-switcher", "className");
+        base_1.shouldEqual(options.closeOnClick, true, "closeOnClick");
+        base_1.shouldEqual(options.closeOnMouseOut, false, "closeOnMouseOut");
+        base_1.shouldEqual(options.openOnClick, true, "openOnClick");
+        base_1.shouldEqual(options.openOnMouseOver, false, "openOnMouseOver");
+        base_1.shouldEqual(options.target, undefined, "target");
+        base_1.shouldEqual(options.tipLabel, "Layers", "tipLabel");
+    }
 });
-//# sourceMappingURL=index.max.js.map
+define("tests/index", ["require", "exports", "tests/spec/layerswitcher"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
+//# sourceMappingURL=index.js.map

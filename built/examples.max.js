@@ -341,7 +341,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         });
         return result;
     }
-    var DEFAULT_OPTIONS = {
+    exports.DEFAULT_OPTIONS = {
         tipLabel: 'Layers',
         openOnMouseOver: false,
         closeOnMouseOut: false,
@@ -354,7 +354,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         __extends(LayerSwitcher, _super);
         function LayerSwitcher(options) {
             var _this = this;
-            options = index_1.defaults(options || {}, DEFAULT_OPTIONS);
+            options = index_1.defaults(options || {}, exports.DEFAULT_OPTIONS);
             _this = _super.call(this, options) || this;
             _this.afterCreate(options);
             return _this;
