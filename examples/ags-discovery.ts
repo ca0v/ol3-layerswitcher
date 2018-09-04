@@ -4,7 +4,8 @@ import { olx } from "openlayers";
 import AgsDiscovery = require("../ol3-layerswitcher/extras/ags-catalog");
 import proj4 = require("proj4");
 import AgsLayerFactory = require("../ol3-layerswitcher/extras/ags-layer-factory");
-import { LayerTileOptions } from "../ol3-layerswitcher/extras/LayerTileOptions";
+import { LayerTileOptions } from "../ol3-layerswitcher/@types/LayerTileOptions";
+import { LayerGroupOptions } from "../ol3-layerswitcher/@types/LayerGroupOptions";
 
 export function run() {
     (<any>ol.proj).proj4.register(proj4);
@@ -57,7 +58,7 @@ export function run() {
 
     function discover(url: string) {
 
-        let rootGroup = new ol.layer.Group({
+        let rootGroup = new ol.layer.Group(<LayerGroupOptions>{
             title: "sampleserver1",
             visible: false,
             layers: []
@@ -80,7 +81,7 @@ export function run() {
                 let addFolders = (group: ol.layer.Group, folders: string[]) => {
                     folders.forEach(f => {
 
-                        let folderGroup = new ol.layer.Group({
+                        let folderGroup = new ol.layer.Group(<LayerGroupOptions>{
                             title: f,
                             visible: false,
                             layers: []

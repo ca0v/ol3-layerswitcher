@@ -1,8 +1,7 @@
-/// <reference types="jquery" />
 declare module "node_modules/ol3-fun/ol3-fun/common" {
     export function uuid(): string;
     export function asArray<T extends HTMLInputElement>(list: NodeList): T[];
-    export function toggle(e: HTMLElement, className: string, force?: boolean): boolean;
+    export function toggle(e: HTMLElement, className: string, toggle?: boolean): void;
     export function parse<T>(v: string, type: T): T;
     export function getQueryParameters(options: any, url?: string): void;
     export function getParameterByName(name: string, url?: string): string;
@@ -13,22 +12,22 @@ declare module "node_modules/ol3-fun/ol3-fun/common" {
     export function debounce<T extends Function>(func: T, wait?: number, immediate?: boolean): T;
     export function html(html: string): HTMLElement;
     export function pair<A, B>(a1: A[], a2: B[]): [A, B][];
-    export function range(n: number): number[];
+    export function range(n: number): any[];
     export function shuffle<T>(array: T[]): T[];
 }
 declare module "node_modules/ol3-fun/ol3-fun/navigation" {
-    import * as ol from "openlayers";
+    import ol = require("openlayers");
     export function zoomToFeature(map: ol.Map, feature: ol.Feature, options?: {
         duration?: number;
         padding?: number;
         minResolution?: number;
-    }): JQuery.Deferred<any, any, any>;
+    }): void;
 }
 declare module "node_modules/ol3-fun/ol3-fun/parse-dms" {
-    export function parse(dmsString: string): {
+    export function parse(dmsString: string): number | {
         lon: number;
         lat: number;
-    } | number;
+    };
 }
 declare module "node_modules/ol3-fun/index" {
     import common = require("node_modules/ol3-fun/ol3-fun/common");

@@ -48,18 +48,9 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         return result;
     }
     exports.asArray = asArray;
-    function toggle(e, className, force) {
-        var exists = e.classList.contains(className);
-        if (exists && force !== true) {
-            e.classList.remove(className);
-            return false;
-        }
-        ;
-        if (!exists && force !== false) {
-            e.classList.add(className);
-            return true;
-        }
-        return exists;
+    function toggle(e, className, toggle) {
+        if (toggle === void 0) { toggle = false; }
+        !toggle ? e.classList.remove(className) : e.classList.add(className);
     }
     exports.toggle = toggle;
     function parse(v, type) {
@@ -140,6 +131,7 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
     }
     exports.cssin = cssin;
     function debounce(func, wait, immediate) {
+        var _this = this;
         if (wait === void 0) { wait = 50; }
         if (immediate === void 0) { immediate = false; }
         var timeout;
@@ -151,13 +143,13 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
             var later = function () {
                 timeout = null;
                 if (!immediate)
-                    func.apply({}, args);
+                    func.apply(_this, args);
             };
             var callNow = immediate && !timeout;
             clearTimeout(timeout);
-            timeout = window.setTimeout(later, wait);
+            timeout = setTimeout(later, wait);
             if (callNow)
-                func.apply({}, args);
+                func.call(_this, args);
         });
     }
     exports.debounce = debounce;
@@ -196,11 +188,10 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
     }
     exports.shuffle = shuffle;
 });
-define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, $, common_1) {
+define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, common_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function zoomToFeature(map, feature, options) {
-        var promise = $.Deferred();
         options = common_1.defaults(options || {}, {
             duration: 1000,
             padding: 256,
@@ -214,8 +205,7 @@ define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openla
                 size: map.getSize(),
                 padding: [options.padding, options.padding, options.padding, options.padding],
                 minResolution: options.minResolution,
-                duration: duration,
-                callback: function () { return promise.resolve(); },
+                duration: duration
             });
         };
         if (ol.extent.containsExtent(currentExtent, targetExtent)) {
@@ -238,7 +228,6 @@ define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openla
             });
             setTimeout(function () { return doit(0.5 * options.duration); }, duration);
         }
-        return promise;
     }
     exports.zoomToFeature = zoomToFeature;
 });
@@ -751,10 +740,6 @@ define("ol3-layerswitcher/extras/ags-webmap", ["require", "exports", "ol3-layers
         return WebMap;
     }());
     exports.WebMap = WebMap;
-});
-define("ol3-layerswitcher/extras/LayerTileOptions", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
 });
 define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";

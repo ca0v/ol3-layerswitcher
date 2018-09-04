@@ -1,18 +1,20 @@
 import ol = require("openlayers");
 import { LayerSwitcher } from "../ol3-layerswitcher/ol3-layerswitcher";
+import { LayerGroupOptions } from "../ol3-layerswitcher/@types/LayerGroupOptions";
+import { LayerTileOptions } from "../ol3-layerswitcher/@types/LayerTileOptions";
 
 export function run() {
     let map = new ol.Map({
         target: 'map',
         layers: [
-            new ol.layer.Group({
+            new ol.layer.Group(<LayerGroupOptions>{
                 'title': 'Base maps',
-                layers: [                   
-                    new ol.layer.Group({
+                layers: [
+                    new ol.layer.Group(<LayerGroupOptions>{
                         'title': 'OSM and Water Color',
                         'label-only': true,
                         layers: [
-                            new ol.layer.Tile({
+                            new ol.layer.Tile(<LayerTileOptions>{
                                 title: 'Water color',
                                 type: 'base',
                                 visible: false,
@@ -20,7 +22,7 @@ export function run() {
                                     layer: 'watercolor'
                                 })
                             }),
-                            new ol.layer.Tile({
+                            new ol.layer.Tile(<LayerTileOptions>{
                                 title: 'OSM',
                                 type: 'base',
                                 visible: true,
@@ -30,13 +32,13 @@ export function run() {
                     })
                 ]
             }),
-            new ol.layer.Group({
+            new ol.layer.Group(<LayerGroupOptions>{
                 title: 'Overlays',
                 layers: [
-                    new ol.layer.Group({
+                    new ol.layer.Group(<LayerGroupOptions>{
                         title: "Countries",
                         layers: [
-                            new ol.layer.Tile({
+                            new ol.layer.Tile(<LayerTileOptions>{
                                 title: 'Countries',
                                 source: new ol.source.TileWMS({
                                     url: 'http://localhost:8080/geoserver/IPS860/wms',

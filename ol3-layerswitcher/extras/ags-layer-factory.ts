@@ -2,7 +2,7 @@ import ol = require("openlayers");
 import { olx } from "openlayers";
 
 import { PortalForArcGis } from "./ags-webmap";
-import { LayerTileOptions } from "./LayerTileOptions";
+import { LayerTileOptions } from "../@types/LayerTileOptions";
 
 /**
  * scale is units per pixel assuming a pixel is a certain size (0.028 cm or 1/90 inches)
