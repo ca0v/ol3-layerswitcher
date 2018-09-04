@@ -1,6 +1,11 @@
 import { olx } from "openlayers";
-export type LayerTileOptions = olx.layer.TileOptions & Partial<{
+
+export type ExtendedOptions = Partial<{
     id: string;
     title: string;
-    type: string;
+    type: "base" | "overlay";
 }>;
+
+export type LayerTileOptions = olx.layer.TileOptions & ExtendedOptions;
+
+export type LayerVectorOptions = olx.layer.VectorOptions & ExtendedOptions;

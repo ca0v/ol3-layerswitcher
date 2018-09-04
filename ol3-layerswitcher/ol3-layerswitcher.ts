@@ -46,6 +46,7 @@ export class LayerSwitcher extends ol.control.Control implements ILayerSwitcher 
 
     private state: Array<{ container: HTMLElement; input: HTMLInputElement; layer: ol.layer.Base }>;
     private unwatch: Array<() => void>;
+    private options: ILayerSwitcherOptions;
 
     hiddenClassName: string;
     shownClassName: string;
@@ -62,11 +63,12 @@ export class LayerSwitcher extends ol.control.Control implements ILayerSwitcher 
     constructor(options?: ILayerSwitcherOptions) {
         options = defaults(options || {}, DEFAULT_OPTIONS);
         super(options);
-        this.afterCreate(options);
+        this.options = options;
+        this.afterCreate();
     }
 
-    private afterCreate(options: typeof DEFAULT_OPTIONS) {
-
+    private afterCreate() {
+        let options = this.options;
         this.hiddenClassName = `ol-unselectable ol-control ${options.className}`;
         this.shownClassName = this.hiddenClassName + ' shown';
 
@@ -140,13 +142,19 @@ export class LayerSwitcher extends ol.control.Control implements ILayerSwitcher 
         this.state = [];
 
         let map = this.getMap();
-        let view = map.getView();
+        if (!map) {
+            this.options.target.appendChild(this.element);
+            return;
+        }
 
         this.renderLayers(map, ul);
 
+        // update when resolution changes..should be using debounce here
         {
+            let view = map && map.getView();
             let doit = () => {
                 let res = view.getResolution();
+                if (typeof res === "undefined") return;
                 this.state.filter(s => !!s.input).forEach(s => {
                     let min = s.layer.getMinResolution();
                     let max = s.layer.getMaxResolution();
@@ -164,6 +172,7 @@ export class LayerSwitcher extends ol.control.Control implements ILayerSwitcher 
      * Ensure only the top-most base layer is visible if more than one is visible.
      */
     private ensureTopVisibleBaseLayerShown() {
+        if (!this.getMap()) return;
         let visibleBaseLyrs = allLayers(this.getMap()).filter(l => l.get('type') === 'base' && l.getVisible());
         if (visibleBaseLyrs.length) this.setVisible(visibleBaseLyrs.shift(), true);
     };
@@ -190,7 +199,7 @@ export class LayerSwitcher extends ol.control.Control implements ILayerSwitcher 
     /**
      * Render all layers that are children of a group.
      */
-    private renderLayer(lyr: ol.layer.Base & {getVisible: Function}, container: HTMLElement) {
+    private renderLayer(lyr: ol.layer.Base & { getVisible: Function }, container: HTMLElement) {
         let result: HTMLInputElement;
 
         let li = document.createElement('li');

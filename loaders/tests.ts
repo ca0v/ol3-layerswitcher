@@ -19,6 +19,7 @@ function getParameterByName(name: string, url?: string) {
 let debug = getParameterByName("debug") === "1";
 let localhost = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
+loadCss("../built/css/ol3-layerswitcher.css");
 loadCss(localhost ? "../node_modules/mocha/mocha.css" : "https://cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.css");
 loadCss(localhost ? "../node_modules/ol3-fun/static/ol/v5.1.3/ol.css" : "https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.1.3/css/ol.css");
 

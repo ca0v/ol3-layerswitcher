@@ -1,7 +1,8 @@
+/// <reference types="jquery" />
 declare module "node_modules/ol3-fun/ol3-fun/common" {
     export function uuid(): string;
     export function asArray<T extends HTMLInputElement>(list: NodeList): T[];
-    export function toggle(e: HTMLElement, className: string, toggle?: boolean): void;
+    export function toggle(e: HTMLElement, className: string, force?: boolean): boolean;
     export function parse<T>(v: string, type: T): T;
     export function getQueryParameters(options: any, url?: string): void;
     export function getParameterByName(name: string, url?: string): string;
@@ -12,22 +13,22 @@ declare module "node_modules/ol3-fun/ol3-fun/common" {
     export function debounce<T extends Function>(func: T, wait?: number, immediate?: boolean): T;
     export function html(html: string): HTMLElement;
     export function pair<A, B>(a1: A[], a2: B[]): [A, B][];
-    export function range(n: number): any[];
+    export function range(n: number): number[];
     export function shuffle<T>(array: T[]): T[];
 }
 declare module "node_modules/ol3-fun/ol3-fun/navigation" {
-    import ol = require("openlayers");
+    import * as ol from "openlayers";
     export function zoomToFeature(map: ol.Map, feature: ol.Feature, options?: {
         duration?: number;
         padding?: number;
         minResolution?: number;
-    }): void;
+    }): JQuery.Deferred<any, any, any>;
 }
 declare module "node_modules/ol3-fun/ol3-fun/parse-dms" {
-    export function parse(dmsString: string): number | {
+    export function parse(dmsString: string): {
         lon: number;
         lat: number;
-    };
+    } | number;
 }
 declare module "node_modules/ol3-fun/index" {
     import common = require("node_modules/ol3-fun/ol3-fun/common");
@@ -59,6 +60,7 @@ declare module "ol3-layerswitcher/ol3-layerswitcher" {
     export class LayerSwitcher extends ol.control.Control implements ILayerSwitcher {
         private state;
         private unwatch;
+        private options;
         hiddenClassName: string;
         shownClassName: string;
         panel: HTMLDivElement;
@@ -77,6 +79,11 @@ declare module "ol3-layerswitcher/ol3-layerswitcher" {
     }
 }
 declare module "index" {
-    import LayerSwitcher = require("ol3-layerswitcher/ol3-layerswitcher");
-    export = LayerSwitcher;
+    import { LayerSwitcher, DEFAULT_OPTIONS, ILayerSwitcherOptions } from "ol3-layerswitcher/ol3-layerswitcher";
+    import { LayerTileOptions as LTO, LayerVectorOptions as LVO } from "./ol3-layerswitcher/@types/LayerTileOptions";
+    import { LayerGroupOptions as LGO } from "./ol3-layerswitcher/@types/LayerGroupOptions";
+    export type LayerTileOptions = LTO;
+    export type LayerGroupOptions = LGO;
+    export type LayerVectorOptions = LVO;
+    export { LayerSwitcher, ILayerSwitcherOptions, DEFAULT_OPTIONS };
 }
