@@ -1,15 +1,12 @@
 export namespace PortalForArcGis {
-
     export interface OperationalLayer {
         // in addition to base layer
         mode?: number;
         popupInfo?: PopupInfo;
     }
-
 }
 
 export namespace PortalForArcGis {
-
     export interface Format {
         places: number;
         digitSeparator: boolean;
@@ -113,8 +110,7 @@ export namespace PortalForArcGis {
         prototype: Prototype;
     }
 
-    export interface Domains {
-    }
+    export interface Domains {}
 
     export interface Type {
         id: number;
@@ -179,7 +175,10 @@ export namespace PortalForArcGis {
     }
 
     export interface Geometry {
-        rings: [number, number][][];
+        rings?: [number, number][][];
+        paths?: [number, number][];
+        x?: number;
+        y?: number;
         spatialReference: SpatialReference;
     }
 
@@ -294,21 +293,18 @@ export namespace PortalForArcGis {
         bookmarks: Bookmark[];
         presentation: Presentation;
     }
-
 }
 
 import Ajax = require("./ajax");
 
 const DEFAULT_URLS = [
     "https://www.arcgis.com/sharing/rest/content/items/204d94c9b1374de9a21574c9efa31164/data?f=json",
-    "https://www.arcgis.com/sharing/rest/content/items/a193c5459e6e4fd99ebf09d893d65cf0/data?f=json"
+    "https://www.arcgis.com/sharing/rest/content/items/a193c5459e6e4fd99ebf09d893d65cf0/data?f=json",
 ];
 
 export class WebMap {
-
     get(url = DEFAULT_URLS[1]) {
         let service = new Ajax(url);
         return service.get<PortalForArcGis.WebMap>();
     }
-
 }

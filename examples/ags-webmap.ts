@@ -1,16 +1,16 @@
 import ol = require("openlayers");
 import { LayerSwitcher } from "../ol3-layerswitcher/ol3-layerswitcher";
 import WebMap = require("../ol3-layerswitcher/extras/ags-webmap");
-import AgsLayerFactory = require("../ol3-layerswitcher/extras/ags-layer-factory");
+import { AgsLayerFactory } from "../ol3-layerswitcher/extras/ags-layer-factory";
 
 export function run() {
     /**
      * scale is units per pixel assuming a pixel is a certain size (0.028 cm or 1/90 inches)
-     * resolution is how many 
+     * resolution is how many
      */
     function asRes(scale: number, dpi = 90.71428571428572) {
         const inchesPerFoot = 12.0;
-        const inchesPerMeter = (inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]); //39.37007874015748;
+        const inchesPerMeter = inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]; //39.37007874015748;
         const dotsPerUnit = dpi * inchesPerMeter;
         return scale / dotsPerUnit;
     }
@@ -18,16 +18,16 @@ export function run() {
     let agsLayerFactory = new AgsLayerFactory();
 
     let map = new ol.Map({
-        target: 'map',
+        target: "map",
         layers: [],
         view: new ol.View({
-            center: ol.proj.transform([-85, 35], 'EPSG:4326', 'EPSG:3857'),
-            zoom: 6
-        })
+            center: ol.proj.transform([-85, 35], "EPSG:4326", "EPSG:3857"),
+            zoom: 6,
+        }),
     });
 
     let layerSwitcher = new LayerSwitcher(<any>{
-        openOnMouseOver: true
+        openOnMouseOver: true,
     });
 
     layerSwitcher.on("show-layer", (args: ol.events.Event & { layer: ol.layer.Base }) => {
@@ -48,58 +48,50 @@ export function run() {
 
     map.addControl(layerSwitcher);
 
-    function webmap(options: {
-        appid?: string;
-        url?: string
-    }) {
+    function webmap(options: { appid?: string; url?: string }) {
         let webmap = new WebMap.WebMap();
 
         let webmapGroup = new ol.layer.Group(<any>{
             title: "WebMap",
             visible: false,
-            layers: []
+            layers: [],
         });
         map.addLayer(webmapGroup);
 
         options.url = options.url || `https://www.arcgis.com/sharing/rest/content/items/${options.appid}/data?f=json`;
 
-        webmap.get(options.url).then(result => {
-
+        webmap.get(options.url).then((result) => {
             if (result.baseMap) {
                 let baseLayers = new ol.layer.Group(<any>{
                     title: "Basemap Layers",
                     visible: false,
-                    layers: []
+                    layers: [],
                 });
                 webmapGroup.getLayers().push(baseLayers);
 
-                result.baseMap.baseMapLayers.forEach(l => {
+                result.baseMap.baseMapLayers.forEach((l) => {
                     let opLayer = agsLayerFactory.asArcGISTiledMapServiceLayer(l, result);
                     baseLayers.getLayers().push(opLayer);
                 });
-
             }
 
             if (result.operationalLayers) {
                 let opLayers = new ol.layer.Group(<any>{
                     title: "Operational Layers",
                     visible: false,
-                    layers: []
+                    layers: [],
                 });
                 webmapGroup.getLayers().push(opLayers);
 
-                result.operationalLayers.forEach(l => {
+                result.operationalLayers.forEach((l) => {
                     let opLayer = agsLayerFactory.asAgsLayer(l, result);
                     opLayers.getLayers().push(opLayer);
                 });
             }
-
-        })
-
+        });
     }
 
     webmap({
-        url: "http://infor1.maps.arcgis.com/sharing/rest/content/items/313b7327133f4802affee46893b4bec7/data?f=json"
+        url: "http://infor1.maps.arcgis.com/sharing/rest/content/items/313b7327133f4802affee46893b4bec7/data?f=json",
     });
-
 }

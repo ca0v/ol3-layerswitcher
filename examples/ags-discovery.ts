@@ -2,7 +2,7 @@ import ol = require("openlayers");
 import { LayerSwitcher } from "../ol3-layerswitcher/ol3-layerswitcher";
 import AgsDiscovery = require("../ol3-layerswitcher/extras/ags-catalog");
 import proj4 = require("proj4");
-import AgsLayerFactory = require("../ol3-layerswitcher/extras/ags-layer-factory");
+import { AgsLayerFactory } from "../ol3-layerswitcher/extras/ags-layer-factory";
 import { LayerTileOptions } from "../ol3-layerswitcher/@types/LayerTileOptions";
 import { LayerGroupOptions } from "../ol3-layerswitcher/@types/LayerGroupOptions";
 import { cssin } from "ol3-fun/ol3-fun/common";

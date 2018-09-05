@@ -1,19 +1,42 @@
 import ol = require("openlayers");
 import { olx } from "openlayers";
 
+import { stringify } from "ol3-fun/tests/base"; // move to ol3-fun/index
 import { PortalForArcGis } from "./ags-webmap";
-import { LayerTileOptions } from "../@types/LayerTileOptions";
+import { LayerTileOptions, LayerVectorOptions } from "../@types/LayerTileOptions";
 
 /**
  * scale is units per pixel assuming a pixel is a certain size (0.028 cm or 1/90 inches)
- * resolution is how many 
+ * resolution is how many
  */
 function asRes(scale: number, dpi = 90.71428571428572) {
     const inchesPerFoot = 12.0;
-    const inchesPerMeter = (inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]); //39.37007874015748;
+    const inchesPerMeter = inchesPerFoot / ol.proj.METERS_PER_UNIT["ft"]; //39.37007874015748;
     const dotsPerUnit = dpi * inchesPerMeter;
     return scale / dotsPerUnit;
 }
+
+// obviously we don't want everything to be red, there's all this still to consider....
+// layerInfo.featureCollection.layers[0].layerDefinition.drawingInfo.renderer.uniqueValueInfos[0].symbol.color;
+const DEFAULT_STYLE = new ol.style.Style({
+    image: new ol.style.Circle({
+        radius: 5,
+        stroke: new ol.style.Stroke({
+            color: "black",
+            width: 2,
+        }),
+        fill: new ol.style.Fill({
+            color: "red",
+        }),
+    }),
+    stroke: new ol.style.Stroke({
+        color: "black",
+        width: 2,
+    }),
+    fill: new ol.style.Fill({
+        color: "red",
+    }),
+});
 
 class VectorLayer extends ol.layer.Vector {
     constructor(options: olx.layer.VectorOptions & { title: string }) {
@@ -21,14 +44,58 @@ class VectorLayer extends ol.layer.Vector {
     }
 }
 
-class AgsLayerFactory {
+export class AgsFeatureSource {
+    public static create(options: { serviceUrl: string; layer: number }) {
+        let esrijsonFormat = new ol.format.EsriJSON();
+        let vectorSource = new ol.source.Vector({
+            loader: function(extent, resolution, projection) {
+                var url = `${options.serviceUrl}/${
+                    options.layer
+                }/query/?f=json&returnGeometry=true&spatialRel=esriSpatialRelIntersects&geometry=${encodeURIComponent(
+                    stringify({
+                        xmin: extent[0],
+                        ymin: extent[1],
+                        xmax: extent[2],
+                        ymax: extent[3],
+                        spatialReference: { wkid: 102100 },
+                    }),
+                )}&geometryType=esriGeometryEnvelope&inSR=102100&outFields=*&outSR=102100`;
+                $.ajax({
+                    url: url,
+                    dataType: "jsonp",
+                    success: function(response) {
+                        if (response.error) {
+                            console.error(response.error.message + "\n" + response.error.details.join("\n"));
+                        } else {
+                            // dataProjection will be read from document
+                            var features = esrijsonFormat.readFeatures(response, {
+                                featureProjection: projection,
+                                dataProjection: projection,
+                            });
+                            if (features.length > 0) {
+                                vectorSource.addFeatures(features);
+                            }
+                        }
+                    },
+                });
+            },
+            strategy: ol.loadingstrategy.tile(
+                ol.tilegrid.createXYZ({
+                    tileSize: 512,
+                }),
+            ),
+        });
+        return vectorSource;
+    }
+}
 
+export class AgsLayerFactory {
     asExtent(appInfo: PortalForArcGis.WebMap) {
         // not defined?
     }
 
-    // make the layer progress aware                                
-    asEvented(layer: ol.layer.Tile) {
+    // make the layer progress aware
+    asEvented(layer: ol.layer.Tile | ol.layer.Vector) {
         let loadCount = 0;
         let source = layer.getSource();
         if (source.on && layer.dispatchEvent) {
@@ -55,26 +122,24 @@ class AgsLayerFactory {
                 debugger;
                 break;
         }
-
     }
 
     asArcGISTiledMapServiceLayer(layerInfo: PortalForArcGis.BaseMapLayer, appInfo?: PortalForArcGis.WebMap) {
-
         // doesn't seem to care about the projection
         let srs = layerInfo.spatialReference || appInfo.spatialReference;
-        let srsCode = !srs ? "3857" : (typeof srs === "string") ? srs : (srs.latestWkid || srs.wkid);
+        let srsCode = !srs ? "3857" : typeof srs === "string" ? srs : srs.latestWkid || srs.wkid;
 
         let source = new ol.source.XYZ({
-            url: layerInfo.url + '/tile/{z}/{y}/{x}',
-            projection: `EPSG:${srsCode}`
+            url: layerInfo.url + "/tile/{z}/{y}/{x}",
+            projection: `EPSG:${srsCode}`,
         });
 
         let tileOptions: LayerTileOptions = {
             id: layerInfo.id,
             title: layerInfo.title || layerInfo.id,
-            type: 'base',
+            type: "base",
             visible: false,
-            source: source
+            source: source,
         };
 
         let layer = new ol.layer.Tile(tileOptions);
@@ -86,33 +151,29 @@ class AgsLayerFactory {
      * Renders the features of the featureset (can be points, lines or polygons) into a feature layer
      */
     asFeatureCollection(layerInfo: PortalForArcGis.OperationalLayer, appInfo?: PortalForArcGis.WebMap) {
+        debugger;
         let source = new ol.source.Vector();
         let layer = new VectorLayer({
             title: layerInfo.id,
-            source: source
+            source: source,
         });
 
-        // obviously we don't want everything to be red, there's all this still to consider....
-        // layerInfo.featureCollection.layers[0].layerDefinition.drawingInfo.renderer.uniqueValueInfos[0].symbol.color;
-        let style = new ol.style.Style({
-            fill: new ol.style.Fill({
-                color: "red"
-            })
-        });
-
-        layer.setStyle((feature: ol.Feature, resolution: number) => {
-            debugger;
-            return style;
-        });
-
+        layer.setStyle(DEFAULT_STYLE);
         layer.setVisible(true);
-        layerInfo.featureCollection.layers.forEach(l => {
+
+        layerInfo.featureCollection.layers.forEach((l) => {
             switch (l.featureSet.geometryType) {
-                case "esriGeometryPolygon":
-                    let features = this.asEsriGeometryPolygon(l.featureSet);
-                    debugger;
-                    features.forEach(f => source.addFeature(f));
+                case "esriGeometryPoint":
+                    this.asEsriGeometryPoint(l.featureSet).forEach((f) => source.addFeature(f));
                     break;
+                case "esriGeometryPolygon":
+                    this.asEsriGeometryPolygon(l.featureSet).forEach((f) => source.addFeature(f));
+                    break;
+                case "esriGeometryPolyline":
+                    this.asEsriGeometryPolyline(l.featureSet).forEach((f) => source.addFeature(f));
+                    break;
+                default:
+                    throw `unexpected geometry type: ${l.featureSet.geometryType}`;
             }
         });
 
@@ -124,41 +185,63 @@ class AgsLayerFactory {
      */
     private asEsriGeometryPolygon(featureSet: PortalForArcGis.FeatureSet) {
         console.assert(featureSet.geometryType === "esriGeometryPolygon");
-        return featureSet.features.map(f => new ol.Feature({
-            attributes: f.attributes,
-            geometry: new ol.geom.Polygon(f.geometry.rings)
-        }));
+        return featureSet.features.map(
+            (f) =>
+                new ol.Feature({
+                    attributes: f.attributes,
+                    geometry: new ol.geom.Polygon(f.geometry.rings),
+                }),
+        );
+    }
+
+    /**
+     * Creates a polygon feature from esri data
+     */
+    private asEsriGeometryPolyline(featureSet: PortalForArcGis.FeatureSet) {
+        console.assert(featureSet.geometryType === "esriGeometryPolyline");
+        return featureSet.features.map(
+            (f) =>
+                new ol.Feature({
+                    attributes: f.attributes,
+                    geometry: new ol.geom.LineString(f.geometry.paths),
+                }),
+        );
+    }
+
+    /**
+     * Creates a polygon feature from esri data
+     */
+    private asEsriGeometryPoint(featureSet: PortalForArcGis.FeatureSet) {
+        console.assert(featureSet.geometryType === "esriGeometryPoint");
+        return featureSet.features.map(
+            (f) =>
+                new ol.Feature({
+                    attributes: f.attributes,
+                    geometry: new ol.geom.Point([f.geometry.x, f.geometry.y]),
+                }),
+        );
     }
 
     asArcGISFeatureLayer(layerInfo: PortalForArcGis.OperationalLayer, appInfo?: PortalForArcGis.WebMap) {
-        // will want to support feature services at some point but just a demo so re-route to MapServer
-        layerInfo.url = layerInfo.url.replace("FeatureServer", "MapServer");
         layerInfo.id = layerInfo.url.substring(1 + layerInfo.url.lastIndexOf("/"));
         layerInfo.url = layerInfo.url.substring(0, layerInfo.url.lastIndexOf("/"));
 
-        let source = new ol.source.TileArcGISRest({
-            url: layerInfo.url,
-            params: {
-                layers: `show:${layerInfo.id}`
-            }
-        });
+        let source = AgsFeatureSource.create({ serviceUrl: layerInfo.url, layer: parseInt(layerInfo.id) });
 
-        let tileOptions: LayerTileOptions = {
+        let layerOptions: LayerVectorOptions = {
             id: layerInfo.id,
             title: layerInfo.title,
             visible: false,
-            source: source
+            source: source,
         };
 
         if (appInfo) {
-            if (appInfo.minScale) tileOptions.maxResolution = asRes(appInfo.minScale);
-            if (appInfo.maxScale) tileOptions.minResolution = asRes(appInfo.maxScale);
+            if (appInfo.minScale) layerOptions.maxResolution = asRes(appInfo.minScale);
+            if (appInfo.maxScale) layerOptions.minResolution = asRes(appInfo.maxScale);
         }
 
-        let layer = new ol.layer.Tile(tileOptions);
+        let layer = new ol.layer.Vector(layerOptions);
+        layer.setStyle(DEFAULT_STYLE);
         return layer;
     }
-
 }
-
-export = AgsLayerFactory;
