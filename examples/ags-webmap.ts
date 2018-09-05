@@ -20,15 +20,14 @@ export function run() {
     let map = new ol.Map({
         target: "map",
         layers: [],
+        controls: [new ol.control.MousePosition(), new ol.control.Zoom()],
         view: new ol.View({
             center: ol.proj.transform([-85, 35], "EPSG:4326", "EPSG:3857"),
             zoom: 6,
         }),
     });
 
-    let layerSwitcher = new LayerSwitcher(<any>{
-        openOnMouseOver: true,
-    });
+    let layerSwitcher = new LayerSwitcher(<any>{});
 
     layerSwitcher.on("show-layer", (args: ol.events.Event & { layer: ol.layer.Base }) => {
         console.log("show layer:", args.layer.get("title"));
@@ -78,11 +77,13 @@ export function run() {
             if (result.operationalLayers) {
                 let opLayers = new ol.layer.Group(<any>{
                     title: "Operational Layers",
-                    visible: false,
+                    visible: true,
                     layers: [],
                 });
                 webmapGroup.getLayers().push(opLayers);
 
+                debugger; // hereiam
+                // the drawings will not render...what changed...style?
                 result.operationalLayers.forEach((l) => {
                     let opLayer = agsLayerFactory.asAgsLayer(l, result);
                     opLayers.getLayers().push(opLayer);

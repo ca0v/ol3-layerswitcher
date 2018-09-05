@@ -5,11 +5,11 @@
   "main": "index.ts",
   "scripts": {
     "clean": "rm built/** -rf",
-    "build-for-css": "node-sass ./ol3-layerswitcher/css/ol3-layerswitcher.scss -o ./built/css/",
+    "build-for-css": "cp ./ol3-layerswitcher/css/*.gif ./built/css && node-sass ./ol3-layerswitcher/css/ol3-layerswitcher.scss -o ./built/css/",
     "build-for-amd": "tsc -p tsconfig.json --outFile built/index.max.js",
     "build-for-examples": "tsc -p examples/tsconfig.json --outFile ./built/examples.max.js",
     "live-for-examples": "live-server --port=5001 --wait=200 --watch=./built/examples.max.js --open=./loaders/examples.html --browser=CHROME",
-    "dev-for-examples": "npm run build-for-examples && start npm run live-for-examples && start npm run build-for-examples -- -w",
+    "dev-for-examples": "npm run build-for-examples && start npm run live-for-examples && npm run build-for-examples -- -w",
     "examples": "npm run build-for-examples && npm run live-for-examples",
     "build-for-tests": "tsc -p tests/tsconfig.json --outFile ./built/spec/index.js",
     "build-for-loaders": "tsc -p loaders/tsconfig.json --outDir ./built/loaders",

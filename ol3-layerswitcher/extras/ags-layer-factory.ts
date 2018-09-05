@@ -38,12 +38,6 @@ const DEFAULT_STYLE = new ol.style.Style({
     }),
 });
 
-class VectorLayer extends ol.layer.Vector {
-    constructor(options: olx.layer.VectorOptions & { title: string }) {
-        super(options);
-    }
-}
-
 export class AgsFeatureSource {
     public static create(options: { serviceUrl: string; layer: number }) {
         let esrijsonFormat = new ol.format.EsriJSON();
@@ -119,8 +113,7 @@ export class AgsLayerFactory {
             case "ArcGISTiledMapServiceLayer":
                 return this.asEvented(this.asArcGISTiledMapServiceLayer(layerInfo, appInfo));
             default:
-                debugger;
-                break;
+                throw `unexpected layerType: ${layerInfo.layerType}`;
         }
     }
 
@@ -151,26 +144,32 @@ export class AgsLayerFactory {
      * Renders the features of the featureset (can be points, lines or polygons) into a feature layer
      */
     asFeatureCollection(layerInfo: PortalForArcGis.OperationalLayer, appInfo?: PortalForArcGis.WebMap) {
-        debugger;
         let source = new ol.source.Vector();
-        let layer = new VectorLayer({
+        let layer = new ol.layer.Vector(<LayerVectorOptions>{
             title: layerInfo.id,
+            visible: layerInfo.visibility,
             source: source,
         });
-
-        layer.setStyle(DEFAULT_STYLE);
-        layer.setVisible(true);
 
         layerInfo.featureCollection.layers.forEach((l) => {
             switch (l.featureSet.geometryType) {
                 case "esriGeometryPoint":
-                    this.asEsriGeometryPoint(l.featureSet).forEach((f) => source.addFeature(f));
+                    this.asEsriGeometryPoint(l.featureSet).forEach((f) => {
+                        source.addFeature(f);
+                        f.setStyle(DEFAULT_STYLE.clone());
+                    });
                     break;
                 case "esriGeometryPolygon":
-                    this.asEsriGeometryPolygon(l.featureSet).forEach((f) => source.addFeature(f));
+                    this.asEsriGeometryPolygon(l.featureSet).forEach((f) => {
+                        source.addFeature(f);
+                        f.setStyle(DEFAULT_STYLE.clone());
+                    });
                     break;
                 case "esriGeometryPolyline":
-                    this.asEsriGeometryPolyline(l.featureSet).forEach((f) => source.addFeature(f));
+                    this.asEsriGeometryPolyline(l.featureSet).forEach((f) => {
+                        source.addFeature(f);
+                        f.setStyle(DEFAULT_STYLE.clone());
+                    });
                     break;
                 default:
                     throw `unexpected geometry type: ${l.featureSet.geometryType}`;
@@ -241,7 +240,7 @@ export class AgsLayerFactory {
         }
 
         let layer = new ol.layer.Vector(layerOptions);
-        layer.setStyle(DEFAULT_STYLE);
+        layer.setStyle(DEFAULT_STYLE.clone());
         return layer;
     }
 }
