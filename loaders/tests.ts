@@ -1,3 +1,6 @@
+let mochaDom = document.getElementById("mocha");
+if (!mochaDom) throw "expecting a 'mocha' element";
+
 function loadCss(url: string) {
     let link = document.createElement("link");
     link.type = "text/css";
@@ -18,6 +21,9 @@ function getParameterByName(name: string, url?: string) {
 
 let debug = getParameterByName("debug") === "1";
 let localhost = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+document.body.className = localhost ? "dark" : "light";
+mochaDom.className = localhost ? "terse" : "verbose";
 
 loadCss("../built/css/ol3-layerswitcher.css");
 loadCss(localhost ? "../node_modules/mocha/mocha.css" : "https://cdnjs.cloudflare.com/ajax/libs/mocha/5.2.0/mocha.css");

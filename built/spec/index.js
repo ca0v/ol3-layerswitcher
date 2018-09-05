@@ -558,6 +558,7 @@ define("tests/spec/layerswitcher", ["require", "exports", "openlayers", "tests/b
     function slowloop(functions, interval, cycles) {
         if (interval === void 0) { interval = 1000; }
         if (cycles === void 0) { cycles = 1; }
+        var d = $.Deferred();
         var index = 0;
         if (cycles <= 0)
             return;
@@ -566,13 +567,14 @@ define("tests/spec/layerswitcher", ["require", "exports", "openlayers", "tests/b
                 index = 0;
                 cycles--;
                 if (cycles <= 0) {
-                    clearInterval(h);
+                    d.resolve();
                     return;
                 }
             }
             (functions[index++])();
         }, interval);
-        return h;
+        d.done(function () { return clearInterval(h); });
+        return d;
     }
     mocha_1.describe("LayerSwitcher Tests", function () {
         mocha_1.it("LayerSwitcher", function () {
@@ -591,42 +593,66 @@ define("tests/spec/layerswitcher", ["require", "exports", "openlayers", "tests/b
                 target: target
             });
             var switcher = new index_2.LayerSwitcher({});
+            var refresh = function (msg) {
+                console.log("refresh", msg);
+                switcher.hidePanel();
+                switcher.showPanel();
+            };
+            var tiles = ["Bing", "OSM"].map(function (n) { return new ol.layer.Tile({
+                title: "Tile " + n,
+                visible: n === "Bing",
+                type: "base",
+                source: new ol.source.Tile({ projection: "EPSG:3857" })
+            }); });
+            var groupLayers = new ol.Collection();
+            var group1 = new ol.layer.Group({
+                title: "Basemaps",
+                visible: true,
+                layers: groupLayers
+            });
+            var vectors = ["Parcel", "Addresses"].map(function (n) { return new ol.layer.Vector({
+                title: n,
+                visible: n === "Addresses",
+                source: new ol.source.Vector({})
+            }); });
+            var mapLayers = map.getLayers();
+            vectors.forEach(function (t) { return t.on("change:visible", function (args) { return refresh("" + args.target.get('title')); }); });
+            tiles.forEach(function (t) { return t.on("change:visible", function (args) { return refresh("" + args.target.get('title')); }); });
+            [group1].forEach(function (t) { return t.on("change:visible", function (args) { return refresh("" + args.target.get('title')); }); });
+            groupLayers.on("add", function (args) { return refresh("adding " + args.target.get("title")); });
+            mapLayers.on("add", function (args) { return refresh("adding " + args.target.get("title")); });
+            switcher.setMap(map);
             slowloop([
                 function () {
-                    switcher.setMap(map);
                     switcher.showPanel();
+                    base_1.shouldEqual(switcher.isVisible(), true, "Panel is visible");
                 },
-                function () {
-                    var tiles = ["Bing", "OSM"].map(function (n) { return new ol.layer.Tile({
-                        title: "Tile " + n,
-                        visible: n === "Bing",
-                        type: "base",
-                        source: new ol.source.Tile({ projection: "EPSG:3857" })
-                    }); });
-                    var group1 = new ol.layer.Group({
-                        title: "Basemaps",
-                        visible: true,
-                        layers: tiles
-                    });
-                    map.addLayer(group1);
-                    switcher.hidePanel();
-                    switcher.showPanel();
-                },
-                function () {
-                    var vectors = ["Parcel", "Addresses"].map(function (n) { return new ol.layer.Vector({
-                        title: n,
-                        visible: n === "Addresses",
-                        source: new ol.source.Vector({})
-                    }); });
-                    vectors.forEach(function (v) { return map.addLayer(v); });
-                    switcher.hidePanel();
-                    switcher.showPanel();
-                },
-                function () {
-                    done();
-                }
-            ]);
-        });
+                function () { return mapLayers.insertAt(0, group1); },
+                function () { return groupLayers.insertAt(0, tiles[0]); },
+                function () { return groupLayers.insertAt(1, tiles[1]); },
+                function () { return tiles[0].setVisible(!tiles[0].getVisible()); },
+                function () { return tiles[0].setVisible(!tiles[0].getVisible()); },
+                function () { return tiles[1].setVisible(!tiles[1].getVisible()); },
+                function () { return tiles[1].setVisible(!tiles[1].getVisible()); },
+                function () { return group1.setVisible(!group1.getVisible()); },
+                function () { return group1.setVisible(!group1.getVisible()); },
+                function () { return mapLayers.insertAt(1, vectors[0]); },
+                function () { return mapLayers.insertAt(2, vectors[1]); },
+                function () { return vectors[0].setVisible(!vectors[0].getVisible()); },
+                function () { return vectors[0].setVisible(!vectors[0].getVisible()); },
+                function () { return vectors[1].setVisible(!vectors[1].getVisible()); },
+                function () { return vectors[1].setVisible(!vectors[1].getVisible()); },
+                function () { return switcher.hidePanel(); },
+                function () { return switcher.showPanel(); },
+            ], 200).then(function () {
+                base_1.shouldEqual(vectors[0].getVisible(), false, "Parcel is hidden");
+                base_1.shouldEqual(vectors[1].getVisible(), true, "Address is visible");
+                base_1.shouldEqual(tiles[0].getVisible(), true, "Bing is visible");
+                base_1.shouldEqual(tiles[1].getVisible(), false, "OSM is hidden");
+                base_1.shouldEqual(switcher.isVisible(), true, "Panel is visible");
+                done();
+            });
+        }).timeout(20 * 200);
     });
     function checkDefaultInputOptions(options) {
         base_1.should(!!options, "options");

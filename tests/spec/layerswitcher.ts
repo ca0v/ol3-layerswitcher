@@ -11,8 +11,9 @@ import {
 } from "../../index";
 import { cssin } from "ol3-fun/ol3-fun/common";
 
-// move to base
+// move to ol-fun/tdd/base
 function slowloop(functions: Array<Function>, interval = 1000, cycles = 1) {
+    let d = $.Deferred();
     let index = 0;
     if (cycles <= 0) return;
     let h = setInterval(() => {
@@ -20,13 +21,14 @@ function slowloop(functions: Array<Function>, interval = 1000, cycles = 1) {
             index = 0;
             cycles--;
             if (cycles <= 0) {
-                clearInterval(h);
+                d.resolve();
                 return;
             }
         }
         (functions[index++])();
     }, interval);
-    return h;
+    d.done(() => clearInterval(h));
+    return d;
 }
 
 describe("LayerSwitcher Tests", () => {
@@ -53,51 +55,77 @@ describe("LayerSwitcher Tests", () => {
         let switcher = new LayerSwitcher({
         });
 
+        let refresh = (msg: string) => {
+            console.log("refresh", msg);
+            switcher.hidePanel();
+            switcher.showPanel(); // refresh
+        };
+
+        let tiles = ["Bing", "OSM"].map(n => new ol.layer.Tile(<LayerTileOptions>{
+            title: `Tile ${n}`,
+            visible: n === "Bing",
+            type: "base",
+            source: new ol.source.Tile({ projection: "EPSG:3857" })
+        }));
+        let groupLayers = new ol.Collection<ol.layer.Tile>();
+        let group1 = new ol.layer.Group(<LayerGroupOptions>{
+            title: "Basemaps",
+            visible: true,
+            layers: groupLayers
+        });
+
+        let vectors = ["Parcel", "Addresses"].map(n => new ol.layer.Vector(<LayerVectorOptions>{
+            title: n,
+            visible: n === "Addresses",
+            source: new ol.source.Vector({})
+        }));
+
+        let mapLayers = map.getLayers();
+
+        vectors.forEach(t => t.on("change:visible", (args) => refresh(`${args.target.get('title')}`)));
+        tiles.forEach(t => t.on("change:visible", (args) => refresh(`${args.target.get('title')}`)));
+        [group1].forEach(t => t.on("change:visible", (args) => refresh(`${args.target.get('title')}`)));
+        groupLayers.on("add", (args) => refresh(`adding ${args.target.get("title")}`));
+        mapLayers.on("add", (args) => refresh(`adding ${args.target.get("title")}`));
+
+        switcher.setMap(map);
+
         slowloop([
             () => {
-                switcher.setMap(map);
                 switcher.showPanel();
+                shouldEqual(switcher.isVisible(), true, "Panel is visible");
             },
-            () => {
-                let tiles = ["Bing", "OSM"].map(n => new ol.layer.Tile(<LayerTileOptions>{
-                    title: `Tile ${n}`,
-                    visible: n === "Bing",
-                    type: "base",
-                    source: new ol.source.Tile({ projection: "EPSG:3857" })
-                }));
-                let group1 = new ol.layer.Group(<LayerGroupOptions>{
-                    title: "Basemaps",
-                    visible: true,
-                    layers: tiles
-                });
-
-                //slowloop([() => tiles[1].setVisible(!tiles[1].getVisible())], 1000, 1);
-                map.addLayer(group1);
-                switcher.hidePanel();
-                switcher.showPanel(); // refresh
-            },
-            () => {
-                let vectors = ["Parcel", "Addresses"].map(n => new ol.layer.Vector(<LayerVectorOptions>{
-                    title: n,
-                    visible: n === "Addresses",
-                    source: new ol.source.Vector({})
-                }));
-
-                //slowloop([() => tile1.setVisible(!tile1.getVisible())], 1000, 1);
-                vectors.forEach(v => map.addLayer(v));
-                switcher.hidePanel();
-                switcher.showPanel(); // refresh
-            },
-            () => {
-                // map.setTarget(null); // destroy map
-                // switcher.hidePanel(); // why not destroy/dispose?
-                // switcher.setMap(null);
-                // switcher.setTarget(null);
-                // cssout();
-                done();
-            }
-        ]);
-    });
+            () => mapLayers.insertAt(0, group1),
+            () => groupLayers.insertAt(0, tiles[0]),
+            () => groupLayers.insertAt(1, tiles[1]),
+            () => tiles[0].setVisible(!tiles[0].getVisible()),
+            () => tiles[0].setVisible(!tiles[0].getVisible()),
+            () => tiles[1].setVisible(!tiles[1].getVisible()),
+            () => tiles[1].setVisible(!tiles[1].getVisible()),
+            () => group1.setVisible(!group1.getVisible()),
+            () => group1.setVisible(!group1.getVisible()),
+            () => mapLayers.insertAt(1, vectors[0]),
+            () => mapLayers.insertAt(2, vectors[1]),
+            () => vectors[0].setVisible(!vectors[0].getVisible()),
+            () => vectors[0].setVisible(!vectors[0].getVisible()),
+            () => vectors[1].setVisible(!vectors[1].getVisible()),
+            () => vectors[1].setVisible(!vectors[1].getVisible()),
+            () => switcher.hidePanel(),
+            () => switcher.showPanel(),
+        ], 200).then(() => {
+            shouldEqual(vectors[0].getVisible(), false, "Parcel is hidden");
+            shouldEqual(vectors[1].getVisible(), true, "Address is visible");
+            shouldEqual(tiles[0].getVisible(), true, "Bing is visible");
+            shouldEqual(tiles[1].getVisible(), false, "OSM is hidden");
+            shouldEqual(switcher.isVisible(), true, "Panel is visible");
+            // map.setTarget(null); // destroy map
+            // switcher.hidePanel(); // why not destroy/dispose?
+            // switcher.setMap(null);
+            // switcher.setTarget(null);
+            // cssout();
+            done();
+        });
+    }).timeout(20 * 200);
 
 });
 
