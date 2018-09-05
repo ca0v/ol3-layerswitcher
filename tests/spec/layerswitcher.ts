@@ -49,6 +49,9 @@ describe("LayerSwitcher Tests", () => {
         document.body.appendChild(target);
 
         let map = new ol.Map({
+            controls: [],
+            interactions: [],
+            layers: [],
             target: target
         });
 
@@ -74,7 +77,7 @@ describe("LayerSwitcher Tests", () => {
             layers: groupLayers
         });
 
-        let vectors = ["Parcel", "Addresses"].map(n => new ol.layer.Vector(<LayerVectorOptions>{
+        let vectors = ["Parcel", "Addresses", "Streets"].map(n => new ol.layer.Vector(<LayerVectorOptions>{
             title: n,
             visible: n === "Addresses",
             source: new ol.source.Vector({})
@@ -85,8 +88,9 @@ describe("LayerSwitcher Tests", () => {
         vectors.forEach(t => t.on("change:visible", (args) => refresh(`${args.target.get('title')}`)));
         tiles.forEach(t => t.on("change:visible", (args) => refresh(`${args.target.get('title')}`)));
         [group1].forEach(t => t.on("change:visible", (args) => refresh(`${args.target.get('title')}`)));
-        groupLayers.on("add", (args) => refresh(`adding ${args.target.get("title")}`));
-        mapLayers.on("add", (args) => refresh(`adding ${args.target.get("title")}`));
+        groupLayers.on("add", (args) => refresh(`add ${args.target.get("title")}`));
+        mapLayers.on("add", (args) => refresh(`add ${args.target.get("title")}`));
+        mapLayers.on("remove", (args) => refresh(`remove ${args.target.get("title")}`));
 
         switcher.setMap(map);
 
@@ -106,17 +110,26 @@ describe("LayerSwitcher Tests", () => {
             () => group1.setVisible(!group1.getVisible()),
             () => mapLayers.insertAt(1, vectors[0]),
             () => mapLayers.insertAt(2, vectors[1]),
+            () => mapLayers.insertAt(0, vectors[2]),
             () => vectors[0].setVisible(!vectors[0].getVisible()),
             () => vectors[0].setVisible(!vectors[0].getVisible()),
             () => vectors[1].setVisible(!vectors[1].getVisible()),
             () => vectors[1].setVisible(!vectors[1].getVisible()),
             () => switcher.hidePanel(),
             () => switcher.showPanel(),
-        ], 200).then(() => {
+            () => mapLayers.remove(vectors[2]),
+            () => mapLayers.insertAt(0, vectors[2]),
+            () => vectors[2].setVisible(true),
+        ], 100).then(() => {
             shouldEqual(vectors[0].getVisible(), false, "Parcel is hidden");
+            vectors[0].setVisible(true);
             shouldEqual(vectors[1].getVisible(), true, "Address is visible");
+            shouldEqual(vectors[2].getVisible(), true, "Address is visible");
             shouldEqual(tiles[0].getVisible(), true, "Bing is visible");
             shouldEqual(tiles[1].getVisible(), false, "OSM is hidden");
+            tiles[1].setVisible(true); // both basemaps are visible...not allowed by control but possible via map API so allow UX to reflect this state
+            shouldEqual(tiles[1].getVisible(), true, "OSM is now visible");
+            shouldEqual(tiles[0].getVisible(), true, "Bing is still visible");
             shouldEqual(switcher.isVisible(), true, "Panel is visible");
             // map.setTarget(null); // destroy map
             // switcher.hidePanel(); // why not destroy/dispose?
