@@ -1,35 +1,14 @@
 import ol = require("openlayers");
-import { should, shouldEqual } from "../base";
-import { describe, it } from "mocha";
+import { describe, it, should, shouldEqual } from "ol3-fun/tests/base";
 import {
     ILayerSwitcherOptions,
     LayerSwitcher,
     DEFAULT_OPTIONS,
     LayerTileOptions,
     LayerGroupOptions,
-    LayerVectorOptions
+    LayerVectorOptions,
 } from "../../index";
-import { cssin } from "ol3-fun/ol3-fun/common";
-
-// move to ol-fun/tdd/base
-function slowloop(functions: Array<Function>, interval = 1000, cycles = 1) {
-    let d = $.Deferred();
-    let index = 0;
-    if (cycles <= 0) return;
-    let h = setInterval(() => {
-        if (index === functions.length) {
-            index = 0;
-            cycles--;
-            if (cycles <= 0) {
-                d.resolve();
-                return;
-            }
-        }
-        (functions[index++])();
-    }, interval);
-    d.done(() => clearInterval(h));
-    return d;
-}
+import { cssin, slowloop } from "ol3-fun/index";
 
 describe("LayerSwitcher Tests", () => {
     it("LayerSwitcher", () => {
@@ -52,11 +31,10 @@ describe("LayerSwitcher Tests", () => {
             controls: [],
             interactions: [],
             layers: [],
-            target: target
+            target: target,
         });
 
-        let switcher = new LayerSwitcher({
-        });
+        let switcher = new LayerSwitcher({});
 
         let refresh = (msg: string) => {
             console.log("refresh", msg);
@@ -64,63 +42,72 @@ describe("LayerSwitcher Tests", () => {
             switcher.showPanel(); // refresh
         };
 
-        let tiles = ["Bing", "OSM"].map(n => new ol.layer.Tile(<LayerTileOptions>{
-            title: `Tile ${n}`,
-            visible: n === "Bing",
-            type: "base",
-            source: new ol.source.Tile({ projection: "EPSG:3857" })
-        }));
+        let tiles = ["Bing", "OSM"].map(
+            (n) =>
+                new ol.layer.Tile(<LayerTileOptions>{
+                    title: `Tile ${n}`,
+                    visible: n === "Bing",
+                    type: "base",
+                    source: new ol.source.Tile({ projection: "EPSG:3857" }),
+                }),
+        );
         let groupLayers = new ol.Collection<ol.layer.Tile>();
         let group1 = new ol.layer.Group(<LayerGroupOptions>{
             title: "Basemaps",
             visible: true,
-            layers: groupLayers
+            layers: groupLayers,
         });
 
-        let vectors = ["Parcel", "Addresses", "Streets"].map(n => new ol.layer.Vector(<LayerVectorOptions>{
-            title: n,
-            visible: n === "Addresses",
-            source: new ol.source.Vector({})
-        }));
+        let vectors = ["Parcel", "Addresses", "Streets"].map(
+            (n) =>
+                new ol.layer.Vector(<LayerVectorOptions>{
+                    title: n,
+                    visible: n === "Addresses",
+                    source: new ol.source.Vector({}),
+                }),
+        );
 
         let mapLayers = map.getLayers();
 
-        vectors.forEach(t => t.on("change:visible", (args) => refresh(`${args.target.get('title')}`)));
-        tiles.forEach(t => t.on("change:visible", (args) => refresh(`${args.target.get('title')}`)));
-        [group1].forEach(t => t.on("change:visible", (args) => refresh(`${args.target.get('title')}`)));
+        vectors.forEach((t) => t.on("change:visible", (args) => refresh(`${args.target.get("title")}`)));
+        tiles.forEach((t) => t.on("change:visible", (args) => refresh(`${args.target.get("title")}`)));
+        [group1].forEach((t) => t.on("change:visible", (args) => refresh(`${args.target.get("title")}`)));
         groupLayers.on("add", (args) => refresh(`add ${args.target.get("title")}`));
         mapLayers.on("add", (args) => refresh(`add ${args.target.get("title")}`));
         mapLayers.on("remove", (args) => refresh(`remove ${args.target.get("title")}`));
 
         switcher.setMap(map);
 
-        slowloop([
-            () => {
-                switcher.showPanel();
-                shouldEqual(switcher.isVisible(), true, "Panel is visible");
-            },
-            () => mapLayers.insertAt(0, group1),
-            () => groupLayers.insertAt(0, tiles[0]),
-            () => groupLayers.insertAt(1, tiles[1]),
-            () => tiles[0].setVisible(!tiles[0].getVisible()),
-            () => tiles[0].setVisible(!tiles[0].getVisible()),
-            () => tiles[1].setVisible(!tiles[1].getVisible()),
-            () => tiles[1].setVisible(!tiles[1].getVisible()),
-            () => group1.setVisible(!group1.getVisible()),
-            () => group1.setVisible(!group1.getVisible()),
-            () => mapLayers.insertAt(1, vectors[0]),
-            () => mapLayers.insertAt(2, vectors[1]),
-            () => mapLayers.insertAt(0, vectors[2]),
-            () => vectors[0].setVisible(!vectors[0].getVisible()),
-            () => vectors[0].setVisible(!vectors[0].getVisible()),
-            () => vectors[1].setVisible(!vectors[1].getVisible()),
-            () => vectors[1].setVisible(!vectors[1].getVisible()),
-            () => switcher.hidePanel(),
-            () => switcher.showPanel(),
-            () => mapLayers.remove(vectors[2]),
-            () => mapLayers.insertAt(0, vectors[2]),
-            () => vectors[2].setVisible(true),
-        ], 100).then(() => {
+        slowloop(
+            [
+                () => {
+                    switcher.showPanel();
+                    shouldEqual(switcher.isVisible(), true, "Panel is visible");
+                },
+                () => mapLayers.insertAt(0, group1),
+                () => groupLayers.insertAt(0, tiles[0]),
+                () => groupLayers.insertAt(1, tiles[1]),
+                () => tiles[0].setVisible(!tiles[0].getVisible()),
+                () => tiles[0].setVisible(!tiles[0].getVisible()),
+                () => tiles[1].setVisible(!tiles[1].getVisible()),
+                () => tiles[1].setVisible(!tiles[1].getVisible()),
+                () => group1.setVisible(!group1.getVisible()),
+                () => group1.setVisible(!group1.getVisible()),
+                () => mapLayers.insertAt(1, vectors[0]),
+                () => mapLayers.insertAt(2, vectors[1]),
+                () => mapLayers.insertAt(0, vectors[2]),
+                () => vectors[0].setVisible(!vectors[0].getVisible()),
+                () => vectors[0].setVisible(!vectors[0].getVisible()),
+                () => vectors[1].setVisible(!vectors[1].getVisible()),
+                () => vectors[1].setVisible(!vectors[1].getVisible()),
+                () => switcher.hidePanel(),
+                () => switcher.showPanel(),
+                () => mapLayers.remove(vectors[2]),
+                () => mapLayers.insertAt(0, vectors[2]),
+                () => vectors[2].setVisible(true),
+            ],
+            100,
+        ).then(() => {
             shouldEqual(vectors[0].getVisible(), false, "Parcel is hidden");
             vectors[0].setVisible(true);
             shouldEqual(vectors[1].getVisible(), true, "Address is visible");
@@ -139,7 +126,6 @@ describe("LayerSwitcher Tests", () => {
             done();
         });
     }).timeout(20 * 200);
-
 });
 
 function checkDefaultInputOptions(options: ILayerSwitcherOptions) {
