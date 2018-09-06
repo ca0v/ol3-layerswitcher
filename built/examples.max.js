@@ -1330,7 +1330,7 @@ define("examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswi
             });
         }
         webmap({
-            url: "http://infor1.maps.arcgis.com/sharing/rest/content/items/313b7327133f4802affee46893b4bec7/data?f=json"
+            url: "https://infor1.maps.arcgis.com/sharing/rest/content/items/313b7327133f4802affee46893b4bec7/data?f=json"
         });
     }
     exports.run = run;
