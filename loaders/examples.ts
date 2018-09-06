@@ -18,7 +18,7 @@
 
     let localhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
-    loadCss("../built/css/ol3-layerswitcher.css");
+    loadCss("../ol3-layerswitcher/css/ol3-layerswitcher.css");
     loadCss(
         localhost
             ? "../node_modules/ol3-fun/static/ol/v5.1.3/ol.css"

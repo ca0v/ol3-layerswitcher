@@ -18,7 +18,7 @@ define("examples/index", ["require", "exports"], function (require, exports) {
         var l = window.location;
         var path = "" + l.origin + l.pathname + "?run=examples/";
         var labs = "\n    ags-discovery\n    ags-webmap\n    layerswitcher\n    accessibility\n\n    index\n    ";
-        document.writeln("\n    <p>\n    Watch the console output for failed assertions (blank is good).\n    </p>\n    ");
+        document.writeln("\n    <a href=\"tests.html\">Tests</a>\n    <p>\n    Watch the console output for failed assertions (blank is good).\n    </p>\n    ");
         document.writeln(labs
             .split(/ /)
             .map(function (v) { return v.trim(); })
@@ -865,25 +865,6 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
         var dotsPerUnit = dpi * inchesPerMeter;
         return scale / dotsPerUnit;
     }
-    var DEFAULT_STYLE = new ol.style.Style({
-        image: new ol.style.Circle({
-            radius: 5,
-            stroke: new ol.style.Stroke({
-                color: "black",
-                width: 2,
-            }),
-            fill: new ol.style.Fill({
-                color: "red",
-            }),
-        }),
-        stroke: new ol.style.Stroke({
-            color: "black",
-            width: 2,
-        }),
-        fill: new ol.style.Fill({
-            color: "red",
-        }),
-    });
     var AgsFeatureSource = (function () {
         function AgsFeatureSource() {
         }
@@ -896,30 +877,32 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
                         ymin: extent[1],
                         xmax: extent[2],
                         ymax: extent[3],
-                        spatialReference: { wkid: 102100 },
+                        spatialReference: { wkid: 102100 }
                     })) + "&geometryType=esriGeometryEnvelope&inSR=102100&outFields=*&outSR=102100";
                     $.ajax({
                         url: url,
                         dataType: "jsonp",
                         success: function (response) {
                             if (response.error) {
-                                console.error(response.error.message + "\n" + response.error.details.join("\n"));
+                                console.error(response.error.message +
+                                    "\n" +
+                                    response.error.details.join("\n"));
                             }
                             else {
                                 var features = esrijsonFormat.readFeatures(response, {
                                     featureProjection: projection,
-                                    dataProjection: projection,
+                                    dataProjection: projection
                                 });
                                 if (features.length > 0) {
                                     vectorSource.addFeatures(features);
                                 }
                             }
-                        },
+                        }
                     });
                 },
                 strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
-                    tileSize: 512,
-                })),
+                    tileSize: 512
+                }))
             });
             return vectorSource;
         };
@@ -962,17 +945,21 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
         };
         AgsLayerFactory.prototype.asArcGISTiledMapServiceLayer = function (layerInfo, appInfo) {
             var srs = layerInfo.spatialReference || appInfo.spatialReference;
-            var srsCode = !srs ? "3857" : typeof srs === "string" ? srs : srs.latestWkid || srs.wkid;
+            var srsCode = !srs
+                ? "3857"
+                : typeof srs === "string"
+                    ? srs
+                    : srs.latestWkid || srs.wkid;
             var source = new ol.source.XYZ({
                 url: layerInfo.url + "/tile/{z}/{y}/{x}",
-                projection: "EPSG:" + srsCode,
+                projection: "EPSG:" + srsCode
             });
             var tileOptions = {
                 id: layerInfo.id,
                 title: layerInfo.title || layerInfo.id,
                 type: "base",
                 visible: false,
-                source: source,
+                source: source
             };
             var layer = new ol.layer.Tile(tileOptions);
             return layer;
@@ -983,26 +970,28 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
             var layer = new ol.layer.Vector({
                 title: layerInfo.id,
                 visible: layerInfo.visibility,
-                source: source,
+                source: source
+            });
+            layer.setStyle(function () {
+                debugger;
+                return null;
             });
             layerInfo.featureCollection.layers.forEach(function (l) {
                 switch (l.featureSet.geometryType) {
                     case "esriGeometryPoint":
                         _this.asEsriGeometryPoint(l.featureSet).forEach(function (f) {
+                            f.set("Total_people_involved", 1);
                             source.addFeature(f);
-                            f.setStyle(DEFAULT_STYLE.clone());
                         });
                         break;
                     case "esriGeometryPolygon":
                         _this.asEsriGeometryPolygon(l.featureSet).forEach(function (f) {
                             source.addFeature(f);
-                            f.setStyle(DEFAULT_STYLE.clone());
                         });
                         break;
                     case "esriGeometryPolyline":
                         _this.asEsriGeometryPolyline(l.featureSet).forEach(function (f) {
                             source.addFeature(f);
-                            f.setStyle(DEFAULT_STYLE.clone());
                         });
                         break;
                     default:
@@ -1014,39 +1003,42 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
         AgsLayerFactory.prototype.asEsriGeometryPolygon = function (featureSet) {
             console.assert(featureSet.geometryType === "esriGeometryPolygon");
             return featureSet.features.map(function (f) {
-                return new ol.Feature({
+                var feature = new ol.Feature({
                     attributes: f.attributes,
-                    geometry: new ol.geom.Polygon(f.geometry.rings),
+                    geometry: new ol.geom.Polygon(f.geometry.rings)
                 });
+                return feature;
             });
         };
         AgsLayerFactory.prototype.asEsriGeometryPolyline = function (featureSet) {
             console.assert(featureSet.geometryType === "esriGeometryPolyline");
             return featureSet.features.map(function (f) {
-                return new ol.Feature({
-                    attributes: f.attributes,
-                    geometry: new ol.geom.LineString(f.geometry.paths),
-                });
+                var feature = new ol.Feature(f.attributes);
+                var geom = new ol.geom.MultiLineString(f.geometry.paths);
+                feature.setGeometry(geom);
+                return feature;
             });
         };
         AgsLayerFactory.prototype.asEsriGeometryPoint = function (featureSet) {
             console.assert(featureSet.geometryType === "esriGeometryPoint");
             return featureSet.features.map(function (f) {
-                return new ol.Feature({
-                    attributes: f.attributes,
-                    geometry: new ol.geom.Point([f.geometry.x, f.geometry.y]),
-                });
+                var feature = new ol.Feature(f.attributes);
+                feature.setGeometry(new ol.geom.Point([f.geometry.x, f.geometry.y]));
+                return feature;
             });
         };
         AgsLayerFactory.prototype.asArcGISFeatureLayer = function (layerInfo, appInfo) {
             layerInfo.id = layerInfo.url.substring(1 + layerInfo.url.lastIndexOf("/"));
             layerInfo.url = layerInfo.url.substring(0, layerInfo.url.lastIndexOf("/"));
-            var source = AgsFeatureSource.create({ serviceUrl: layerInfo.url, layer: parseInt(layerInfo.id) });
+            var source = AgsFeatureSource.create({
+                serviceUrl: layerInfo.url,
+                layer: parseInt(layerInfo.id)
+            });
             var layerOptions = {
                 id: layerInfo.id,
                 title: layerInfo.title,
                 visible: false,
-                source: source,
+                source: source
             };
             if (appInfo) {
                 if (appInfo.minScale)
@@ -1055,7 +1047,6 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
                     layerOptions.minResolution = asRes(appInfo.maxScale);
             }
             var layer = new ol.layer.Vector(layerOptions);
-            layer.setStyle(DEFAULT_STYLE.clone());
             return layer;
         };
         return AgsLayerFactory;
@@ -1227,6 +1218,25 @@ define("examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layer
 define("examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-webmap", "ol3-layerswitcher/extras/ags-layer-factory"], function (require, exports, ol, ol3_layerswitcher_3, WebMap, ags_layer_factory_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    var DEFAULT_STYLE = new ol.style.Style({
+        image: new ol.style.Circle({
+            radius: 5,
+            stroke: new ol.style.Stroke({
+                color: "black",
+                width: 2
+            }),
+            fill: new ol.style.Fill({
+                color: "red"
+            })
+        }),
+        stroke: new ol.style.Stroke({
+            color: "black",
+            width: 2
+        }),
+        fill: new ol.style.Fill({
+            color: "red"
+        })
+    });
     function run() {
         function asRes(scale, dpi) {
             if (dpi === void 0) { dpi = 90.71428571428572; }
@@ -1242,8 +1252,8 @@ define("examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswi
             controls: [new ol.control.MousePosition(), new ol.control.Zoom()],
             view: new ol.View({
                 center: ol.proj.transform([-85, 35], "EPSG:4326", "EPSG:3857"),
-                zoom: 6,
-            }),
+                zoom: 6
+            })
         });
         var layerSwitcher = new ol3_layerswitcher_3.LayerSwitcher({});
         layerSwitcher.on("show-layer", function (args) {
@@ -1265,17 +1275,19 @@ define("examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswi
             var webmap = new WebMap.WebMap();
             var webmapGroup = new ol.layer.Group({
                 title: "WebMap",
-                visible: false,
-                layers: [],
+                visible: true,
+                layers: []
             });
             map.addLayer(webmapGroup);
-            options.url = options.url || "https://www.arcgis.com/sharing/rest/content/items/" + options.appid + "/data?f=json";
+            options.url =
+                options.url ||
+                    "https://www.arcgis.com/sharing/rest/content/items/" + options.appid + "/data?f=json";
             webmap.get(options.url).then(function (result) {
                 if (result.baseMap) {
                     var baseLayers_1 = new ol.layer.Group({
                         title: "Basemap Layers",
                         visible: false,
-                        layers: [],
+                        layers: []
                     });
                     webmapGroup.getLayers().push(baseLayers_1);
                     result.baseMap.baseMapLayers.forEach(function (l) {
@@ -1287,19 +1299,38 @@ define("examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswi
                     var opLayers_1 = new ol.layer.Group({
                         title: "Operational Layers",
                         visible: true,
-                        layers: [],
+                        layers: []
                     });
                     webmapGroup.getLayers().push(opLayers_1);
-                    debugger;
                     result.operationalLayers.forEach(function (l) {
                         var opLayer = agsLayerFactory.asAgsLayer(l, result);
+                        if (opLayer instanceof ol.layer.Vector) {
+                            opLayer.setStyle(function (feature) {
+                                var size = feature.get("Total_people_involved");
+                                var style = DEFAULT_STYLE.clone();
+                                if (size) {
+                                    style.getImage().setRadius(Math.max(4, Math.min(100, size)));
+                                    var text = new ol.style.Text({
+                                        text: size + "",
+                                        fill: new ol.style.Fill({ color: "white" }),
+                                        stroke: new ol.style.Stroke({
+                                            width: 1,
+                                            color: "black"
+                                        })
+                                    });
+                                    style.setText(text);
+                                }
+                                feature.setStyle(style);
+                                return style;
+                            });
+                        }
                         opLayers_1.getLayers().push(opLayer);
                     });
                 }
             });
         }
         webmap({
-            url: "http://infor1.maps.arcgis.com/sharing/rest/content/items/313b7327133f4802affee46893b4bec7/data?f=json",
+            url: "http://infor1.maps.arcgis.com/sharing/rest/content/items/313b7327133f4802affee46893b4bec7/data?f=json"
         });
     }
     exports.run = run;

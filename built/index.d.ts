@@ -30,13 +30,37 @@ declare module "node_modules/ol3-fun/ol3-fun/parse-dms" {
         lat: number;
     } | number;
 }
+declare module "node_modules/ol3-fun/ol3-fun/slowloop" {
+    export function slowloop(functions: Array<Function>, interval?: number, cycles?: number): JQuery.Deferred<any, any, any>;
+}
 declare module "node_modules/ol3-fun/index" {
-    import common = require("node_modules/ol3-fun/ol3-fun/common");
-    import navigation = require("node_modules/ol3-fun/ol3-fun/navigation");
-    import dms = require("node_modules/ol3-fun/ol3-fun/parse-dms");
-    let index: typeof common & {
-        dms: typeof dms;
-        navigation: typeof navigation;
+    import { asArray, cssin, debounce, defaults, doif, getParameterByName, getQueryParameters, html, mixin, pair, parse, range, shuffle, toggle, uuid } from "node_modules/ol3-fun/ol3-fun/common";
+    import { zoomToFeature } from "node_modules/ol3-fun/ol3-fun/navigation";
+    import { parse as dmsParse } from "node_modules/ol3-fun/ol3-fun/parse-dms";
+    import { slowloop } from "node_modules/ol3-fun/ol3-fun/slowloop";
+    let index: {
+        asArray: typeof asArray;
+        cssin: typeof cssin;
+        debounce: typeof debounce;
+        defaults: typeof defaults;
+        doif: typeof doif;
+        getParameterByName: typeof getParameterByName;
+        getQueryParameters: typeof getQueryParameters;
+        html: typeof html;
+        mixin: typeof mixin;
+        pair: typeof pair;
+        parse: typeof parse;
+        range: typeof range;
+        shuffle: typeof shuffle;
+        toggle: typeof toggle;
+        uuid: typeof uuid;
+        slowloop: typeof slowloop;
+        dms: {
+            parse: typeof dmsParse;
+        };
+        navigation: {
+            zoomToFeature: typeof zoomToFeature;
+        };
     };
     export = index;
 }
@@ -55,7 +79,7 @@ declare module "ol3-layerswitcher/ol3-layerswitcher" {
     export const DEFAULT_OPTIONS: ILayerSwitcherOptions;
     export interface ILayerSwitcher {
         on(type: "show-layer", listener: any): any;
-        on(type: (string | string[]), listener: ol.EventsListenerFunctionType, opt_this?: GlobalObject): (ol.EventsKey | ol.EventsKey[]);
+        on(type: string | string[], listener: ol.EventsListenerFunctionType, opt_this?: GlobalObject): ol.EventsKey | ol.EventsKey[];
     }
     export class LayerSwitcher extends ol.control.Control implements ILayerSwitcher {
         private state;

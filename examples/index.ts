@@ -11,6 +11,7 @@ export function run() {
     `;
     
     document.writeln(`
+    <a href="tests.html">Tests</a>
     <p>
     Watch the console output for failed assertions (blank is good).
     </p>

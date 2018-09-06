@@ -5,7 +5,7 @@
   "main": "index.ts",
   "scripts": {
     "clean": "rm built/** -rf",
-    "build-for-css": "cp ./ol3-layerswitcher/css/*.gif ./built/css && node-sass ./ol3-layerswitcher/css/ol3-layerswitcher.scss -o ./built/css/",
+    "build-for-css": "node-sass ./ol3-layerswitcher/css/ol3-layerswitcher.scss -o ./",
     "build-for-amd": "tsc -p tsconfig.json --outFile built/index.max.js",
     "build-for-examples": "tsc -p examples/tsconfig.json --outFile ./built/examples.max.js",
     "live-for-examples": "live-server --port=5001 --wait=200 --watch=./built/examples.max.js --open=./loaders/examples.html --browser=CHROME",
@@ -18,7 +18,7 @@
     "tests": "npm run dev-for-tests",
     "build": "npm run build-for-loaders && npm run build-for-amd && npm run build-for-tests && npm run build-for-examples",
     "install": "npm run build-for-amd",
-    "before-push": "npm run clean && npm run build && mv built/index.max.d.ts built/index.d.ts && npm run build-for-css",
+    "before-push": "npm run clean && npm run build && mv built/index.max.d.ts built/index.d.ts && npm run build-for-css && npm run live-for-tests",
     "test": "npm run before-push && npm run live-for-tests"
   },
   "repository": {

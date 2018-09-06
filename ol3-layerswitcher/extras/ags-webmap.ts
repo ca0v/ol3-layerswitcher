@@ -176,7 +176,7 @@ export namespace PortalForArcGis {
 
     export interface Geometry {
         rings?: [number, number][][];
-        paths?: [number, number][];
+        paths?: [number, number][][];
         x?: number;
         y?: number;
         spatialReference: SpatialReference;
