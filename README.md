@@ -1,5 +1,6 @@
 # OpenLayers LayerSwitcher
-[ol3-layerswitcher](https://github.com/ca0v/ol3-layerswitcher/tree/v5.1.3)
+[ol3-layerswitcher](https://github.com/ca0v/ol3-layerswitcher/tree/v5.1.3), 
+forked from [matt walker](https://github.com/walkermatt/ol-layerswitcher) to add nested layers
 
 Grouped layer list control for an OpenLayers map.
 

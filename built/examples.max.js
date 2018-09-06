@@ -1340,64 +1340,66 @@ define("examples/layerswitcher", ["require", "exports", "openlayers", "ol3-layer
     Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         var map = new ol.Map({
-            target: 'map',
+            target: "map",
             layers: [
                 new ol.layer.Group({
-                    'title': 'Base maps',
+                    title: "Base maps",
                     layers: [
                         new ol.layer.Group({
-                            'title': 'OSM and Water Color',
-                            'label-only': true,
+                            title: "OSM and Water Color",
+                            "label-only": true,
                             layers: [
                                 new ol.layer.Tile({
-                                    title: 'Water color',
-                                    type: 'base',
+                                    title: "Water color",
+                                    type: "base",
                                     visible: false,
                                     source: new ol.source.Stamen({
-                                        layer: 'watercolor'
-                                    })
+                                        layer: "watercolor",
+                                    }),
                                 }),
                                 new ol.layer.Tile({
-                                    title: 'OSM',
-                                    type: 'base',
+                                    title: "OSM",
+                                    type: "base",
                                     visible: true,
-                                    source: new ol.source.OSM()
-                                })
-                            ]
-                        })
-                    ]
+                                    source: new ol.source.OSM(),
+                                }),
+                            ],
+                        }),
+                    ],
                 }),
                 new ol.layer.Group({
-                    title: 'Overlays',
+                    title: "Overlays",
                     layers: [
                         new ol.layer.Group({
-                            title: "Countries",
+                            title: "Marine Regions",
                             layers: [
                                 new ol.layer.Tile({
-                                    title: 'Countries',
+                                    title: "The World Marine Heritage Sites",
                                     source: new ol.source.TileWMS({
-                                        url: 'http://demo.opengeo.org/geoserver/wms',
-                                        params: { 'LAYERS': 'ne:ne_10m_admin_1_states_provinces_lines_shp' },
-                                        serverType: 'geoserver'
-                                    })
-                                })
-                            ]
-                        })
-                    ]
-                })
+                                        url: "http://geo.vliz.be/geoserver/MarineRegions/wms",
+                                        params: {
+                                            LAYERS: "MarineRegions:worldheritagemarineprogramme",
+                                        },
+                                        serverType: "geoserver",
+                                    }),
+                                }),
+                            ],
+                        }),
+                    ],
+                }),
             ],
             view: new ol.View({
-                center: ol.proj.transform([-85, 35], 'EPSG:4326', 'EPSG:3857'),
-                zoom: 6
-            })
+                center: ol.proj.transform([-85, 35], "EPSG:4326", "EPSG:3857"),
+                zoom: 6,
+            }),
         });
         var layerSwitcher = new ol3_layerswitcher_4.LayerSwitcher({
-            tipLabel: 'Layers',
+            tipLabel: "Layers",
             openOnMouseOver: true,
             closeOnMouseOut: true,
             openOnClick: false,
             closeOnClick: true,
-            target: null
+            target: null,
         });
         layerSwitcher.on("show-layer", function (args) {
             console.log("show layer:", args.layer.get("title"));
