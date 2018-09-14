@@ -15,8 +15,8 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function uuid() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+            var r = (Math.random() * 16) | 0, v = c == "x" ? r : (r & 0x3) | 0x8;
             return v.toString(16);
         });
     }
@@ -35,7 +35,6 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
             e.classList.remove(className);
             return false;
         }
-        ;
         if (!exists && force !== false) {
             e.classList.add(className);
             return true;
@@ -51,7 +50,7 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         if (typeof type === "boolean")
             return (v === "1" || v === "true");
         if (Array.isArray(type)) {
-            return (v.split(",").map(function (v) { return parse(v, type[0]); }));
+            return v.split(",").map(function (v) { return parse(v, type[0]); });
         }
         throw "unknown type: " + type;
     }
@@ -75,7 +74,7 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         if (!results)
             return null;
         if (!results[2])
-            return '';
+            return "";
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
     exports.getParameterByName = getParameterByName;
@@ -84,8 +83,14 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
             cb(v);
     }
     exports.doif = doif;
-    function mixin(a, b) {
-        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
+    function mixin(a) {
+        var b = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            b[_i - 1] = arguments[_i];
+        }
+        b.forEach(function (b) {
+            Object.keys(b).forEach(function (k) { return (a[k] = b[k]); });
+        });
         return a;
     }
     exports.mixin = mixin;
@@ -95,7 +100,9 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
             b[_i - 1] = arguments[_i];
         }
         b.forEach(function (b) {
-            Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
+            Object.keys(b)
+                .filter(function (k) { return a[k] === undefined; })
+                .forEach(function (k) { return (a[k] = b[k]); });
         });
         return a;
     }
@@ -151,7 +158,7 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
     function pair(a1, a2) {
         var result = new Array(a1.length * a2.length);
         var i = 0;
-        a1.forEach(function (v1) { return a2.forEach(function (v2) { return result[i++] = [v1, v2]; }); });
+        a1.forEach(function (v1) { return a2.forEach(function (v2) { return (result[i++] = [v1, v2]); }); });
         return result;
     }
     exports.pair = pair;
@@ -196,7 +203,7 @@ define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openla
                 padding: [options.padding, options.padding, options.padding, options.padding],
                 minResolution: options.minResolution,
                 duration: duration,
-                callback: function () { return promise.resolve(); },
+                callback: function () { return promise.resolve(); }
             });
         };
         if (ol.extent.containsExtent(currentExtent, targetExtent)) {
@@ -229,17 +236,17 @@ define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], functio
     function decDegFromMatch(m) {
         var signIndex = {
             "-": -1,
-            "N": 1,
-            "S": -1,
-            "E": 1,
-            "W": -1
+            N: 1,
+            S: -1,
+            E: 1,
+            W: -1
         };
         var latLonIndex = {
             "-": "",
-            "N": "lat",
-            "S": "lat",
-            "E": "lon",
-            "W": "lon"
+            N: "lat",
+            S: "lat",
+            E: "lon",
+            W: "lon"
         };
         var degrees, minutes, seconds, sign, latLon;
         sign = signIndex[m[2]] || signIndex[m[1]] || signIndex[m[6]] || 1;
@@ -248,11 +255,11 @@ define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], functio
         seconds = m[5] ? Number(m[5]) : 0;
         latLon = latLonIndex[m[1]] || latLonIndex[m[6]];
         if (!inRange(degrees, 0, 180))
-            throw 'Degrees out of range';
+            throw "Degrees out of range";
         if (!inRange(minutes, 0, 60))
-            throw 'Minutes out of range';
+            throw "Minutes out of range";
         if (!inRange(seconds, 0, 60))
-            throw 'Seconds out of range';
+            throw "Seconds out of range";
         return {
             decDeg: sign * (degrees + minutes / 60 + seconds / 3600),
             latLon: latLon
@@ -261,14 +268,29 @@ define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], functio
     function inRange(value, a, b) {
         return value >= a && value <= b;
     }
-    function parse(dmsString) {
+    function toDegreesMinutesAndSeconds(coordinate) {
+        var absolute = Math.abs(coordinate);
+        var degrees = Math.floor(absolute);
+        var minutesNotTruncated = (absolute - degrees) * 60;
+        var minutes = Math.floor(minutesNotTruncated);
+        var seconds = Math.floor((minutesNotTruncated - minutes) * 60);
+        return degrees + " " + minutes + " " + seconds;
+    }
+    function fromLonLatToDms(lon, lat) {
+        var latitude = toDegreesMinutesAndSeconds(lat);
+        var latitudeCardinal = lat >= 0 ? "N" : "S";
+        var longitude = toDegreesMinutesAndSeconds(lon);
+        var longitudeCardinal = lon >= 0 ? "E" : "W";
+        return latitude + " " + latitudeCardinal + " " + longitude + " " + longitudeCardinal;
+    }
+    function fromDmsToLonLat(dmsString) {
         var _a;
         dmsString = dmsString.trim();
         var dmsRe = /([NSEW])?(-)?(\d+(?:\.\d+)?)[°º:d\s]?\s?(?:(\d+(?:\.\d+)?)['’‘′:]\s?(?:(\d{1,2}(?:\.\d+)?)(?:"|″|’’|'')?)?)?\s?([NSEW])?/i;
         var dmsString2;
         var m1 = dmsString.match(dmsRe);
         if (!m1)
-            throw 'Could not parse string';
+            throw "Could not parse string";
         if (m1[1]) {
             m1[6] = undefined;
             dmsString2 = dmsString.substr(m1[0].length - 1).trim();
@@ -279,25 +301,30 @@ define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], functio
         var decDeg1 = decDegFromMatch(m1);
         var m2 = dmsString2.match(dmsRe);
         var decDeg2 = m2 && decDegFromMatch(m2);
-        if (typeof decDeg1.latLon === 'undefined') {
+        if (typeof decDeg1.latLon === "undefined") {
             if (!isNaN(decDeg1.decDeg) && decDeg2 && isNaN(decDeg2.decDeg)) {
                 return decDeg1.decDeg;
             }
             else if (!isNaN(decDeg1.decDeg) && decDeg2 && !isNaN(decDeg2.decDeg)) {
-                decDeg1.latLon = 'lat';
-                decDeg2.latLon = 'lon';
+                decDeg1.latLon = "lat";
+                decDeg2.latLon = "lon";
             }
             else {
-                throw 'Could not parse string';
+                throw "Could not parse string";
             }
         }
-        if (typeof decDeg2.latLon === 'undefined') {
-            decDeg2.latLon = decDeg1.latLon === 'lat' ? 'lon' : 'lat';
+        if (typeof decDeg2.latLon === "undefined") {
+            decDeg2.latLon = decDeg1.latLon === "lat" ? "lon" : "lat";
         }
         return _a = {},
             _a[decDeg1.latLon] = decDeg1.decDeg,
             _a[decDeg2.latLon] = decDeg2.decDeg,
             _a;
+    }
+    function parse(value) {
+        if (typeof value === "string")
+            return fromDmsToLonLat(value);
+        return fromLonLatToDms(value.lon, value.lat);
     }
     exports.parse = parse;
 });
@@ -309,6 +336,7 @@ define("node_modules/ol3-fun/ol3-fun/slowloop", ["require", "exports"], function
         if (cycles === void 0) { cycles = 1; }
         var d = $.Deferred();
         var index = 0;
+        var cycle = 0;
         if (!functions || 0 >= cycles) {
             d.resolve();
             return d;
@@ -316,20 +344,251 @@ define("node_modules/ol3-fun/ol3-fun/slowloop", ["require", "exports"], function
         var h = setInterval(function () {
             if (index === functions.length) {
                 index = 0;
-                cycles--;
-                if (cycles <= 0) {
+                if (++cycle === cycles) {
                     d.resolve();
+                    clearInterval(h);
                     return;
                 }
             }
-            functions[index++]();
+            try {
+                d.notify({ index: index, cycle: cycle });
+                functions[index++]();
+            }
+            catch (ex) {
+                clearInterval(h);
+                d.reject(ex);
+            }
         }, interval);
-        d.done(function () { return clearInterval(h); });
         return d;
     }
     exports.slowloop = slowloop;
 });
-define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop"], function (require, exports, common_2, navigation_1, parse_dms_1, slowloop_1) {
+define("node_modules/ol3-fun/ol3-fun/is-primitive", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function isPrimitive(a) {
+        switch (typeof a) {
+            case "boolean":
+                return true;
+            case "number":
+                return true;
+            case "object":
+                return null === a;
+            case "string":
+                return true;
+            case "symbol":
+                return true;
+            case "undefined":
+                return true;
+            default:
+                throw "unknown type: " + typeof a;
+        }
+    }
+    exports.isPrimitive = isPrimitive;
+});
+define("node_modules/ol3-fun/ol3-fun/is-cyclic", ["require", "exports", "node_modules/ol3-fun/ol3-fun/is-primitive"], function (require, exports, is_primitive_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function isCyclic(a) {
+        if (is_primitive_1.isPrimitive(a))
+            return false;
+        var test = function (o, history) {
+            if (is_primitive_1.isPrimitive(o))
+                return false;
+            if (0 <= history.indexOf(o)) {
+                return true;
+            }
+            return Object.keys(o).some(function (k) { return test(o[k], [o].concat(history)); });
+        };
+        return Object.keys(a).some(function (k) { return test(a[k], [a]); });
+    }
+    exports.isCyclic = isCyclic;
+});
+define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_modules/ol3-fun/ol3-fun/is-cyclic", "node_modules/ol3-fun/ol3-fun/is-primitive"], function (require, exports, is_cyclic_1, is_primitive_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function extend(a, b, trace, history) {
+        if (trace === void 0) { trace = []; }
+        if (history === void 0) { history = []; }
+        if (!b) {
+            b = a;
+            a = {};
+        }
+        var merger = new Merger(trace, history);
+        return merger.deepExtend(a, b);
+    }
+    exports.extend = extend;
+    function isUndefined(a) {
+        return typeof a === "undefined";
+    }
+    function isArray(val) {
+        return Array.isArray(val);
+    }
+    function isHash(val) {
+        return !is_primitive_2.isPrimitive(val) && !canClone(val) && !isArray(val);
+    }
+    function canClone(val) {
+        if (val instanceof Date)
+            return true;
+        if (val instanceof RegExp)
+            return true;
+        return false;
+    }
+    function clone(val) {
+        if (val instanceof Date)
+            return new Date(val.getTime());
+        if (val instanceof RegExp)
+            return new RegExp(val.source);
+        throw "unclonable type encounted: " + typeof val;
+    }
+    var Merger = (function () {
+        function Merger(trace, history) {
+            this.trace = trace;
+            this.history = history;
+        }
+        Merger.prototype.deepExtend = function (target, source) {
+            var _this = this;
+            if (target === source)
+                return target;
+            if (!target || (!isHash(target) && !isArray(target))) {
+                throw "first argument must be an object";
+            }
+            if (!source || (!isHash(source) && !isArray(source))) {
+                throw "second argument must be an object";
+            }
+            if (typeof source === "function") {
+                return target;
+            }
+            this.push(source);
+            if (isArray(source)) {
+                if (!isArray(target)) {
+                    throw "attempting to merge an array into a non-array";
+                }
+                this.merge("id", target, source);
+                return target;
+            }
+            else if (isArray(target)) {
+                throw "attempting to merge a non-array into an array";
+            }
+            Object.keys(source).forEach(function (k) { return _this.mergeChild(k, target, source[k]); });
+            return target;
+        };
+        Merger.prototype.cloneArray = function (val) {
+            var _this = this;
+            this.push(val);
+            return val.map(function (v) { return (isArray(v) ? _this.cloneArray(v) : canClone(v) ? clone(v) : v); });
+        };
+        Merger.prototype.push = function (a) {
+            if (is_primitive_2.isPrimitive(a))
+                return;
+            if (-1 < this.history.indexOf(a)) {
+                if (is_cyclic_1.isCyclic(a)) {
+                    throw "circular reference detected";
+                }
+            }
+            else
+                this.history.push(a);
+        };
+        Merger.prototype.mergeChild = function (key, target, sourceValue) {
+            var targetValue = target[key];
+            if (sourceValue === targetValue)
+                return;
+            if (is_primitive_2.isPrimitive(sourceValue)) {
+                this.trace.push({
+                    key: key,
+                    target: target,
+                    was: targetValue,
+                    value: sourceValue
+                });
+                target[key] = sourceValue;
+                return;
+            }
+            if (canClone(sourceValue)) {
+                sourceValue = clone(sourceValue);
+                this.trace.push({
+                    key: key,
+                    target: target,
+                    was: targetValue,
+                    value: sourceValue
+                });
+                target[key] = sourceValue;
+                return;
+            }
+            if (isArray(sourceValue)) {
+                if (isArray(targetValue)) {
+                    this.deepExtend(targetValue, sourceValue);
+                    return;
+                }
+                sourceValue = this.cloneArray(sourceValue);
+                this.trace.push({
+                    key: key,
+                    target: target,
+                    was: targetValue,
+                    value: sourceValue
+                });
+                target[key] = sourceValue;
+                return;
+            }
+            if (!isHash(sourceValue)) {
+                throw "unexpected source type: " + typeof sourceValue;
+            }
+            if (!isHash(targetValue)) {
+                var traceIndex = this.trace.length;
+                try {
+                    sourceValue = this.deepExtend({}, sourceValue);
+                }
+                finally {
+                    this.trace.splice(traceIndex, this.trace.length - traceIndex);
+                }
+                this.trace.push({
+                    key: key,
+                    target: target,
+                    was: targetValue,
+                    value: sourceValue
+                });
+                target[key] = sourceValue;
+                return;
+            }
+            this.deepExtend(targetValue, sourceValue);
+            return;
+        };
+        Merger.prototype.merge = function (key, target, source) {
+            var _this = this;
+            if (!isArray(target))
+                throw "target must be an array";
+            if (!isArray(source))
+                throw "input must be an array";
+            if (!source.length)
+                return target;
+            var hash = {};
+            target.forEach(function (item, i) {
+                if (!item[key])
+                    return;
+                hash[item[key]] = i;
+            });
+            source.forEach(function (sourceItem, i) {
+                var sourceKey = sourceItem[key];
+                var targetIndex = hash[sourceKey];
+                if (isUndefined(sourceKey)) {
+                    if (isHash(target[i]) && !!target[i][key]) {
+                        throw "cannot replace an identified array item with a non-identified array item";
+                    }
+                    _this.mergeChild(i, target, sourceItem);
+                    return;
+                }
+                if (isUndefined(targetIndex)) {
+                    _this.mergeChild(target.length, target, sourceItem);
+                    return;
+                }
+                _this.mergeChild(targetIndex, target, sourceItem);
+                return;
+            });
+            return target;
+        };
+        return Merger;
+    }());
+});
+define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop", "node_modules/ol3-fun/ol3-fun/deep-extend"], function (require, exports, common_2, navigation_1, parse_dms_1, slowloop_1, deep_extend_1) {
     "use strict";
     var index = {
         asArray: common_2.asArray,
@@ -337,6 +596,7 @@ define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fu
         debounce: common_2.debounce,
         defaults: common_2.defaults,
         doif: common_2.doif,
+        deepExtend: deep_extend_1.extend,
         getParameterByName: common_2.getParameterByName,
         getQueryParameters: common_2.getQueryParameters,
         html: common_2.html,
@@ -350,10 +610,12 @@ define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fu
         slowloop: slowloop_1.slowloop,
         dms: {
             parse: parse_dms_1.parse,
+            fromDms: function (dms) { return parse_dms_1.parse(dms); },
+            fromLonLat: function (o) { return parse_dms_1.parse(o); }
         },
         navigation: {
-            zoomToFeature: navigation_1.zoomToFeature,
-        },
+            zoomToFeature: navigation_1.zoomToFeature
+        }
     };
     return index;
 });

@@ -1,13 +1,13 @@
 /// <reference types="jquery" />
 declare module "node_modules/ol3-fun/ol3-fun/common" {
     export function uuid(): string;
-    export function asArray<T extends HTMLInputElement>(list: NodeList): T[];
+    export function asArray<T extends HTMLInputElement>(list: NodeList | HTMLCollectionOf<Element>): T[];
     export function toggle(e: HTMLElement, className: string, force?: boolean): boolean;
     export function parse<T>(v: string, type: T): T;
     export function getQueryParameters(options: any, url?: string): void;
     export function getParameterByName(name: string, url?: string): string;
     export function doif<T>(v: T, cb: (v: T) => void): void;
-    export function mixin<A extends any, B extends any>(a: A, b: B): A & B;
+    export function mixin<A extends any, B extends any>(a: A, ...b: B[]): A & B;
     export function defaults<A extends any, B extends any>(a: A, ...b: B[]): A & B;
     export function cssin(name: string, css: string): () => void;
     export function debounce<T extends Function>(func: T, wait?: number, immediate?: boolean): T;
@@ -25,7 +25,11 @@ declare module "node_modules/ol3-fun/ol3-fun/navigation" {
     }): JQuery.Deferred<any, any, any>;
 }
 declare module "node_modules/ol3-fun/ol3-fun/parse-dms" {
-    export function parse(dmsString: string): {
+    export function parse(value: {
+        lon: number;
+        lat: number;
+    }): string;
+    export function parse(value: string): {
         lon: number;
         lat: number;
     } | number;
@@ -33,17 +37,36 @@ declare module "node_modules/ol3-fun/ol3-fun/parse-dms" {
 declare module "node_modules/ol3-fun/ol3-fun/slowloop" {
     export function slowloop(functions: Array<Function>, interval?: number, cycles?: number): JQuery.Deferred<any, any, any>;
 }
+declare module "node_modules/ol3-fun/ol3-fun/is-primitive" {
+    export function isPrimitive(a: any): boolean;
+}
+declare module "node_modules/ol3-fun/ol3-fun/is-cyclic" {
+    export function isCyclic(a: any): boolean;
+}
+declare module "node_modules/ol3-fun/ol3-fun/deep-extend" {
+    export interface TraceItem {
+        path?: string;
+        target: Object;
+        key: string | number;
+        value: any;
+        was: any;
+    }
+    type History = Array<object>;
+    export function extend<A extends object>(a: A, b?: Partial<A>, trace?: TraceItem[], history?: History): A;
+}
 declare module "node_modules/ol3-fun/index" {
     import { asArray, cssin, debounce, defaults, doif, getParameterByName, getQueryParameters, html, mixin, pair, parse, range, shuffle, toggle, uuid } from "node_modules/ol3-fun/ol3-fun/common";
     import { zoomToFeature } from "node_modules/ol3-fun/ol3-fun/navigation";
     import { parse as dmsParse } from "node_modules/ol3-fun/ol3-fun/parse-dms";
     import { slowloop } from "node_modules/ol3-fun/ol3-fun/slowloop";
+    import { extend as deepExtend } from "node_modules/ol3-fun/ol3-fun/deep-extend";
     let index: {
         asArray: typeof asArray;
         cssin: typeof cssin;
         debounce: typeof debounce;
         defaults: typeof defaults;
         doif: typeof doif;
+        deepExtend: typeof deepExtend;
         getParameterByName: typeof getParameterByName;
         getQueryParameters: typeof getQueryParameters;
         html: typeof html;
@@ -57,6 +80,14 @@ declare module "node_modules/ol3-fun/index" {
         slowloop: typeof slowloop;
         dms: {
             parse: typeof dmsParse;
+            fromDms: (dms: string) => {
+                lon: number;
+                lat: number;
+            };
+            fromLonLat: (o: {
+                lon: number;
+                lat: number;
+            }) => string;
         };
         navigation: {
             zoomToFeature: typeof zoomToFeature;

@@ -1,16 +1,15 @@
 {
-    "compilerOptions": {
-        "module": "amd",
-        "target": "es5",
-        "declaration": true,
-        "noImplicitAny": false,
-        "removeComments": true,
-        "outFile": "built/index.max.js",
-        "sourceMap": true,
-        "moduleResolution": "classic",
-        "baseUrl": "node_modules"
-    },
-    "include": [
-        "index.ts"
-    ]
+	"compilerOptions": {
+		"allowJs": false,
+		"module": "amd",
+		"target": "es5",
+		"declaration": true,
+		"noImplicitAny": false,
+		"removeComments": true,
+		"outFile": "built/index.max.js",
+		"sourceMap": true,
+		"moduleResolution": "classic",
+		"baseUrl": "node_modules"
+	},
+	"include": ["index.ts"]
 }
