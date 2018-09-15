@@ -8,13 +8,12 @@ All layers should have a `title` property and base layers should have a `type` p
 
 [v5.1.3](https://github.com/ca0v/ol3-layerswitcher/tree/v5.1.3) adds npm support
 
-## Tests
+## Examples and Tests
 
--   [v5.1.3](https://rawgit.com/ca0v/ol3-layerswitcher/v5.1.3/loaders/tests.html?test=*)
+-   [v5.1.3](https://rawgit.com/ca0v/ol3-layerswitcher/v5.1.3/loaders/tests.html?theme=dark&debug=1)
 
-## Examples
+## Past Examples
 
--   [v5.1.3](https://rawgit.com/ca0v/ol3-layerswitcher/v5.1.3/loaders/tests.html)
 -   [v4.0.2](https://rawgit.com/ca0v/ol3-layerswitcher/v4.0.2/rawgit.html)
 -   [v3.20.1](https://rawgit.com/ca0v/ol3-layerswitcher/v3.20.1/rawgit.html)
 -   [v2.0.4](https://cdn.rawgit.com/ca0v/ol3-layerswitcher/v2.0.4/rawgit.html)
