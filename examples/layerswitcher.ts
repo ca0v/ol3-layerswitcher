@@ -19,18 +19,18 @@ export function run() {
 								type: "base",
 								visible: false,
 								source: new ol.source.Stamen({
-									layer: "watercolor",
-								}),
+									layer: "watercolor"
+								})
 							}),
 							new ol.layer.Tile(<LayerTileOptions>{
 								title: "OSM",
 								type: "base",
 								visible: true,
-								source: new ol.source.OSM(),
-							}),
-						],
-					}),
-				],
+								source: new ol.source.OSM()
+							})
+						]
+					})
+				]
 			}),
 			new ol.layer.Group(<LayerGroupOptions>{
 				title: "Overlays",
@@ -43,29 +43,30 @@ export function run() {
 								source: new ol.source.TileWMS({
 									url: "http://geo.vliz.be/geoserver/MarineRegions/wms",
 									params: {
-										LAYERS: "MarineRegions:worldheritagemarineprogramme",
+										LAYERS: "MarineRegions:worldheritagemarineprogramme"
 									},
-									serverType: "geoserver",
-								}),
-							}),
-						],
-					}),
-				],
-			}),
+									serverType: "geoserver"
+								})
+							})
+						]
+					})
+				]
+			})
 		],
 		view: new ol.View({
 			center: ol.proj.transform([-85, 35], "EPSG:4326", "EPSG:3857"),
-			zoom: 6,
-		}),
+			zoom: 6
+		})
 	});
 
-	let layerSwitcher = new LayerSwitcher({
+	let layerSwitcher = LayerSwitcher.create({
+		map: map,
 		tipLabel: "Layers",
 		openOnMouseOver: true,
 		closeOnMouseOut: true,
 		openOnClick: false,
 		closeOnClick: true,
-		target: null,
+		target: null
 	});
 
 	layerSwitcher.on("show-layer", (args: any) => {
@@ -76,6 +77,4 @@ export function run() {
 		console.log("hide layer:", args.layer.get("title"));
 		return true;
 	});
-
-	map.addControl(layerSwitcher);
 }

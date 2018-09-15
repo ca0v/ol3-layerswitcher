@@ -9,12 +9,19 @@ declare module "node_modules/ol3-fun/ol3-fun/common" {
     export function doif<T>(v: T, cb: (v: T) => void): void;
     export function mixin<A extends any, B extends any>(a: A, ...b: B[]): A & B;
     export function defaults<A extends any, B extends any>(a: A, ...b: B[]): A & B;
-    export function cssin(name: string, css: string): () => void;
     export function debounce<T extends Function>(func: T, wait?: number, immediate?: boolean): T;
     export function html(html: string): HTMLElement;
     export function pair<A, B>(a1: A[], a2: B[]): [A, B][];
     export function range(n: number): number[];
     export function shuffle<T>(array: T[]): T[];
+}
+declare module "node_modules/ol3-fun/ol3-fun/css" {
+    export function cssin(name: string, css: string): () => void;
+    export function loadCss(options: {
+        name: string;
+        url?: string;
+        css?: string;
+    }): () => void;
 }
 declare module "node_modules/ol3-fun/ol3-fun/navigation" {
     import * as ol from "openlayers";
@@ -45,17 +52,19 @@ declare module "node_modules/ol3-fun/ol3-fun/is-cyclic" {
 }
 declare module "node_modules/ol3-fun/ol3-fun/deep-extend" {
     export interface TraceItem {
-        path?: string;
+        path?: Path;
         target: Object;
         key: string | number;
         value: any;
         was: any;
     }
     type History = Array<object>;
-    export function extend<A extends object>(a: A, b?: Partial<A>, trace?: TraceItem[], history?: History): A;
+    type Path = Array<any>;
+    export function extend<A extends object>(a: A, b?: Partial<A>, trace?: Array<TraceItem>, history?: History): A;
 }
 declare module "node_modules/ol3-fun/index" {
-    import { asArray, cssin, debounce, defaults, doif, getParameterByName, getQueryParameters, html, mixin, pair, parse, range, shuffle, toggle, uuid } from "node_modules/ol3-fun/ol3-fun/common";
+    import { asArray, debounce, defaults, doif, getParameterByName, getQueryParameters, html, mixin, pair, parse, range, shuffle, toggle, uuid } from "node_modules/ol3-fun/ol3-fun/common";
+    import { cssin, loadCss } from "node_modules/ol3-fun/ol3-fun/css";
     import { zoomToFeature } from "node_modules/ol3-fun/ol3-fun/navigation";
     import { parse as dmsParse } from "node_modules/ol3-fun/ol3-fun/parse-dms";
     import { slowloop } from "node_modules/ol3-fun/ol3-fun/slowloop";
@@ -63,6 +72,7 @@ declare module "node_modules/ol3-fun/index" {
     let index: {
         asArray: typeof asArray;
         cssin: typeof cssin;
+        loadCss: typeof loadCss;
         debounce: typeof debounce;
         defaults: typeof defaults;
         doif: typeof doif;
@@ -99,18 +109,22 @@ declare module "ol3-layerswitcher/ol3-layerswitcher" {
     import ol = require("openlayers");
     import { GlobalObject } from "openlayers";
     export interface ILayerSwitcherOptions {
+        map?: ol.Map;
         tipLabel?: string;
         openOnMouseOver?: boolean;
         closeOnMouseOut?: boolean;
         openOnClick?: boolean;
         closeOnClick?: boolean;
         className?: string;
+        position?: string;
+        expanded?: boolean;
         target?: HTMLElement;
     }
     export const DEFAULT_OPTIONS: ILayerSwitcherOptions;
-    export interface ILayerSwitcher {
+    export interface ILayerSwitcher extends ol.control.Control {
         on(type: "show-layer", listener: any): any;
         on(type: string | string[], listener: ol.EventsListenerFunctionType, opt_this?: GlobalObject): ol.EventsKey | ol.EventsKey[];
+        destroy(): void;
     }
     export class LayerSwitcher extends ol.control.Control implements ILayerSwitcher {
         private state;
@@ -121,7 +135,11 @@ declare module "ol3-layerswitcher/ol3-layerswitcher" {
         panel: HTMLDivElement;
         element: HTMLElement;
         button: HTMLButtonElement;
+        static create(options?: ILayerSwitcherOptions): LayerSwitcher;
         constructor(options?: ILayerSwitcherOptions);
+        destroy(): void;
+        setPosition(position: string): void;
+        cssin(): void;
         private afterCreate;
         isVisible(): boolean;
         showPanel(): void;
@@ -131,6 +149,7 @@ declare module "ol3-layerswitcher/ol3-layerswitcher" {
         private setVisible;
         private renderLayer;
         private renderLayers;
+        addLayer(layer: ol.layer.Layer, title: string): void;
     }
 }
 declare module "index" {

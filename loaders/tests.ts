@@ -55,7 +55,7 @@
 	);
 
 	if (isTest) {
-		cssin(`map, .map { position: initial; width: 400px; height: 400px; border: 1px solid black;}`);
+		cssin(`map, .map { top: auto; left: auto; width: 400px; height: 400px; border: 1px solid silver;}`);
 	}
 
 	if (isRun) {
@@ -83,7 +83,10 @@
 		paths: {
 			openlayers: localhost
 				? "../../node_modules/ol3-fun/static/ol/v5.1.3/ol"
-				: "https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.1.3/build/ol"
+				: "https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.1.3/build/ol",
+			proj4: localhost
+				? "../../node_modules/proj4/dist/proj4"
+				: "https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.5.0/proj4"
 		},
 		packages: [
 			{
@@ -109,7 +112,15 @@
 					map.className = map.id = "map";
 					document.body.appendChild(map);
 				}
-				requirejs(testNames.split(","), (...tests) => tests.forEach(test => test.run()));
+				requirejs(testNames.split(","), (...tests) =>
+					tests.forEach(test => {
+						if (test.run) {
+							test.run();
+						} else {
+							document.writeln(Object.keys(test).join("<br/>"));
+						}
+					})
+				);
 			}
 			if (isTest) {
 				let testNames = getParameterByName("test") || "*";

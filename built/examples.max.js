@@ -126,26 +126,6 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         return a;
     }
     exports.defaults = defaults;
-    function cssin(name, css) {
-        var id = "style-" + name;
-        var styleTag = document.getElementById(id);
-        if (!styleTag) {
-            styleTag = document.createElement("style");
-            styleTag.id = id;
-            styleTag.type = "text/css";
-            document.head.appendChild(styleTag);
-            styleTag.appendChild(document.createTextNode(css));
-        }
-        var dataset = styleTag.dataset;
-        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
-        return function () {
-            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
-            if (dataset["count"] === "0") {
-                styleTag.remove();
-            }
-        };
-    }
-    exports.cssin = cssin;
     function debounce(func, wait, immediate) {
         if (wait === void 0) { wait = 50; }
         if (immediate === void 0) { immediate = false; }
@@ -202,6 +182,58 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         return array;
     }
     exports.shuffle = shuffle;
+});
+define("node_modules/ol3-fun/ol3-fun/css", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function cssin(name, css) {
+        var id = "style-" + name;
+        var styleTag = document.getElementById(id);
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = id;
+            styleTag.type = "text/css";
+            document.head.appendChild(styleTag);
+            styleTag.appendChild(document.createTextNode(css));
+        }
+        var dataset = styleTag.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                styleTag.remove();
+            }
+        };
+    }
+    exports.cssin = cssin;
+    function loadCss(options) {
+        if (!options.url && !options.css)
+            throw "must provide either a url or css option";
+        if (options.url && options.css)
+            throw "cannot provide both a url and a css";
+        if (options.name && options.css)
+            return cssin(options.name, options.css);
+        var id = "style-" + options.name;
+        var head = document.getElementsByTagName("head")[0];
+        var link = document.getElementById(id);
+        if (!link) {
+            link = document.createElement("link");
+            link.id = id;
+            link.type = "text/css";
+            link.rel = "stylesheet";
+            link.href = options.url;
+            head.appendChild(link);
+        }
+        var dataset = link.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                link.remove();
+            }
+        };
+    }
+    exports.loadCss = loadCss;
 });
 define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, $, common_1) {
     "use strict";
@@ -427,14 +459,13 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function extend(a, b, trace, history) {
-        if (trace === void 0) { trace = []; }
         if (history === void 0) { history = []; }
         if (!b) {
             b = a;
             a = {};
         }
         var merger = new Merger(trace, history);
-        return merger.deepExtend(a, b);
+        return merger.deepExtend(a, b, []);
     }
     exports.extend = extend;
     function isUndefined(a) {
@@ -461,11 +492,17 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
         throw "unclonable type encounted: " + typeof val;
     }
     var Merger = (function () {
-        function Merger(trace, history) {
-            this.trace = trace;
+        function Merger(traceItems, history) {
+            this.traceItems = traceItems;
             this.history = history;
         }
-        Merger.prototype.deepExtend = function (target, source) {
+        Merger.prototype.trace = function (item) {
+            if (this.traceItems) {
+                this.traceItems.push(item);
+            }
+            return item.path;
+        };
+        Merger.prototype.deepExtend = function (target, source, path) {
             var _this = this;
             if (target === source)
                 return target;
@@ -483,19 +520,29 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                 if (!isArray(target)) {
                     throw "attempting to merge an array into a non-array";
                 }
-                this.merge("id", target, source);
+                this.mergeArray("id", target, source, path);
                 return target;
             }
             else if (isArray(target)) {
                 throw "attempting to merge a non-array into an array";
             }
-            Object.keys(source).forEach(function (k) { return _this.mergeChild(k, target, source[k]); });
+            Object.keys(source).forEach(function (k) { return _this.mergeChild(k, target, source[k], [k].concat(path)); });
             return target;
         };
-        Merger.prototype.cloneArray = function (val) {
+        Merger.prototype.cloneArray = function (val, path) {
             var _this = this;
             this.push(val);
-            return val.map(function (v) { return (isArray(v) ? _this.cloneArray(v) : canClone(v) ? clone(v) : v); });
+            return val.map(function (v) {
+                if (is_primitive_2.isPrimitive(v))
+                    return v;
+                if (isHash(v))
+                    return _this.deepExtend({}, v, path);
+                if (isArray(v))
+                    return _this.cloneArray(v, path);
+                if (canClone(v))
+                    return clone(v);
+                throw "unknown type encountered: " + typeof v;
+            });
         };
         Merger.prototype.push = function (a) {
             if (is_primitive_2.isPrimitive(a))
@@ -508,12 +555,13 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
             else
                 this.history.push(a);
         };
-        Merger.prototype.mergeChild = function (key, target, sourceValue) {
+        Merger.prototype.mergeChild = function (key, target, sourceValue, path) {
             var targetValue = target[key];
             if (sourceValue === targetValue)
                 return;
             if (is_primitive_2.isPrimitive(sourceValue)) {
-                this.trace.push({
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -524,7 +572,8 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
             }
             if (canClone(sourceValue)) {
                 sourceValue = clone(sourceValue);
-                this.trace.push({
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -535,11 +584,12 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
             }
             if (isArray(sourceValue)) {
                 if (isArray(targetValue)) {
-                    this.deepExtend(targetValue, sourceValue);
+                    this.deepExtend(targetValue, sourceValue, path);
                     return;
                 }
-                sourceValue = this.cloneArray(sourceValue);
-                this.trace.push({
+                sourceValue = this.cloneArray(sourceValue, path);
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -552,14 +602,10 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                 throw "unexpected source type: " + typeof sourceValue;
             }
             if (!isHash(targetValue)) {
-                var traceIndex = this.trace.length;
-                try {
-                    sourceValue = this.deepExtend({}, sourceValue);
-                }
-                finally {
-                    this.trace.splice(traceIndex, this.trace.length - traceIndex);
-                }
-                this.trace.push({
+                var merger = new Merger(null, this.history);
+                sourceValue = merger.deepExtend({}, sourceValue, path);
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -568,10 +614,10 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                 target[key] = sourceValue;
                 return;
             }
-            this.deepExtend(targetValue, sourceValue);
+            this.deepExtend(targetValue, sourceValue, path);
             return;
         };
-        Merger.prototype.merge = function (key, target, source) {
+        Merger.prototype.mergeArray = function (key, target, source, path) {
             var _this = this;
             if (!isArray(target))
                 throw "target must be an array";
@@ -592,14 +638,14 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                     if (isHash(target[i]) && !!target[i][key]) {
                         throw "cannot replace an identified array item with a non-identified array item";
                     }
-                    _this.mergeChild(i, target, sourceItem);
+                    _this.mergeChild(i, target, sourceItem, path);
                     return;
                 }
                 if (isUndefined(targetIndex)) {
-                    _this.mergeChild(target.length, target, sourceItem);
+                    _this.mergeChild(target.length, target, sourceItem, path);
                     return;
                 }
-                _this.mergeChild(targetIndex, target, sourceItem);
+                _this.mergeChild(targetIndex, target, sourceItem, path);
                 return;
             });
             return target;
@@ -607,11 +653,12 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
         return Merger;
     }());
 });
-define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop", "node_modules/ol3-fun/ol3-fun/deep-extend"], function (require, exports, common_2, navigation_1, parse_dms_1, slowloop_1, deep_extend_1) {
+define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/css", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop", "node_modules/ol3-fun/ol3-fun/deep-extend"], function (require, exports, common_2, css_1, navigation_1, parse_dms_1, slowloop_1, deep_extend_1) {
     "use strict";
     var index = {
         asArray: common_2.asArray,
-        cssin: common_2.cssin,
+        cssin: css_1.cssin,
+        loadCss: css_1.loadCss,
         debounce: common_2.debounce,
         defaults: common_2.defaults,
         doif: common_2.doif,
@@ -641,6 +688,12 @@ define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fu
 define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers", "node_modules/ol3-fun/index"], function (require, exports, ol, index_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    var olcss = {
+        CLASS_CONTROL: "ol-control",
+        CLASS_UNSELECTABLE: "ol-unselectable",
+        CLASS_UNSUPPORTED: "ol-unsupported",
+        CLASS_HIDDEN: "ol-hidden"
+    };
     function allLayers(lyr) {
         var result = [];
         lyr.getLayers().forEach(function (lyr, idx, a) {
@@ -651,6 +704,11 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         });
         return result;
     }
+    var eventNames = {
+        dispose: "dispose",
+        hide: "hide",
+        show: "show"
+    };
     exports.DEFAULT_OPTIONS = {
         tipLabel: "Layers",
         openOnMouseOver: false,
@@ -658,6 +716,8 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         openOnClick: true,
         closeOnClick: true,
         className: "layer-switcher",
+        position: "bottom-2 right-2",
+        expanded: false,
         target: null
     };
     var LayerSwitcher = (function (_super) {
@@ -667,14 +727,38 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
             options = index_1.defaults(options || {}, exports.DEFAULT_OPTIONS);
             _this = _super.call(this, options) || this;
             _this.options = options;
+            _this.unwatch = [];
             _this.afterCreate();
             return _this;
         }
+        LayerSwitcher.create = function (options) {
+            index_1.loadCss({ name: "ol3-layerswitcher", url: "../ol3-layerswitcher/css/ol3-layerswitcher.css" });
+            return new LayerSwitcher(options);
+        };
+        LayerSwitcher.prototype.destroy = function () {
+            this.hidePanel();
+            this.unwatch = [];
+            this.getMap() && this.getMap().removeControl(this);
+            this.dispatchEvent(eventNames.dispose);
+            this.setTarget(null);
+        };
+        LayerSwitcher.prototype.setPosition = function (position) {
+            var _this = this;
+            this.options.position.split(" ").forEach(function (k) { return _this.options.target.classList.remove(k); });
+            position.split(" ").forEach(function (k) { return _this.options.target.classList.add(k); });
+            this.options.position = position;
+        };
+        LayerSwitcher.prototype.cssin = function () {
+            var className = this.options.className;
+            var positions = index_1.pair("top left right bottom".split(" "), index_1.range(24)).map(function (pos) { return "." + className + "." + (pos[0] + (-pos[1] || "")) + " { " + pos[0] + ":" + (0.5 + pos[1]) + "em; }"; });
+            index_1.cssin(className, positions.join("\n"));
+        };
         LayerSwitcher.prototype.afterCreate = function () {
             var _this = this;
             var options = this.options;
-            this.hiddenClassName = "ol-unselectable ol-control " + options.className;
+            this.hiddenClassName = options.className + " " + options.position + " " + olcss.CLASS_UNSELECTABLE + " " + olcss.CLASS_CONTROL;
             this.shownClassName = this.hiddenClassName + " shown";
+            this.cssin();
             var element = document.createElement("div");
             element.className = this.hiddenClassName;
             var button = (this.button = document.createElement("button"));
@@ -683,7 +767,6 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
             this.panel = document.createElement("div");
             this.panel.className = "panel";
             element.appendChild(this.panel);
-            this.unwatch = [];
             this.element = element;
             this.setTarget(options.target);
             if (options.openOnMouseOver) {
@@ -694,12 +777,11 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
             }
             if (options.openOnClick || options.closeOnClick) {
                 button.addEventListener("click", function (e) {
-                    _this.isVisible()
-                        ? options.closeOnClick && _this.hidePanel()
-                        : options.openOnClick && _this.showPanel();
+                    _this.isVisible() ? options.closeOnClick && _this.hidePanel() : options.openOnClick && _this.showPanel();
                     e.preventDefault();
                 });
             }
+            options.map && this.setMap(options.map);
         };
         LayerSwitcher.prototype.isVisible = function () {
             return this.element.className != this.hiddenClassName;
@@ -713,6 +795,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         LayerSwitcher.prototype.hidePanel = function () {
             this.element.className = this.hiddenClassName;
             this.unwatch.forEach(function (f) { return f(); });
+            this.unwatch = [];
         };
         LayerSwitcher.prototype.renderPanel = function () {
             var _this = this;
@@ -789,9 +872,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                         index_1.toggle(ul_1, "hide-layer-group", !input_1.checked);
                         _this.setVisible(lyr, input_1.checked);
                         var childLayers = lyr.getLayers();
-                        _this.state
-                            .filter(function (s) { return s.container === ul_1 && s.input && s.input.checked; })
-                            .forEach(function (state) {
+                        _this.state.filter(function (s) { return s.container === ul_1 && s.input && s.input.checked; }).forEach(function (state) {
                             _this.setVisible(state.layer, input_1.checked);
                         });
                     });
@@ -850,6 +931,9 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                 .reverse();
             return lyrs.filter(function (l) { return !!l.get("title"); }).forEach(function (l) { return _this.renderLayer(l, elm); });
         };
+        LayerSwitcher.prototype.addLayer = function (layer, title) {
+            layer.set("title", title);
+        };
         return LayerSwitcher;
     }(ol.control.Control));
     exports.LayerSwitcher = LayerSwitcher;
@@ -874,18 +958,18 @@ define("examples/accessibility", ["require", "exports", "openlayers", "ol3-layer
                                     type: "base",
                                     visible: false,
                                     source: new ol.source.Stamen({
-                                        layer: "watercolor",
-                                    }),
+                                        layer: "watercolor"
+                                    })
                                 }),
                                 new ol.layer.Tile({
                                     title: "OSM",
                                     type: "base",
                                     visible: false,
-                                    source: new ol.source.OSM(),
-                                }),
-                            ],
-                        }),
-                    ],
+                                    source: new ol.source.OSM()
+                                })
+                            ]
+                        })
+                    ]
                 }),
                 new ol.layer.Group({
                     title: "Overlays",
@@ -901,26 +985,27 @@ define("examples/accessibility", ["require", "exports", "openlayers", "ol3-layer
                                     source: new ol.source.TileWMS({
                                         url: "http://localhost:8080/geoserver/IPS860/wms",
                                         params: { LAYERS: "IPS860:addresses" },
-                                        serverType: "geoserver",
-                                    }),
-                                }),
-                            ],
-                        }),
-                    ],
-                }),
+                                        serverType: "geoserver"
+                                    })
+                                })
+                            ]
+                        })
+                    ]
+                })
             ],
             view: new ol.View({
                 center: ol.proj.transform([-115.22, 36.18], "EPSG:4326", "EPSG:3857"),
-                zoom: 20,
-            }),
+                zoom: 20
+            })
         });
-        var layerSwitcher = new ol3_layerswitcher_1.LayerSwitcher({
+        var layerSwitcher = ol3_layerswitcher_1.LayerSwitcher.create({
+            map: map,
             tipLabel: "Layers",
             openOnMouseOver: false,
             closeOnMouseOut: false,
             openOnClick: true,
             closeOnClick: true,
-            target: null,
+            target: null
         });
         layerSwitcher.on("show-layer", function (args) {
             console.log("show layer:", args.layer.get("title"));
@@ -928,7 +1013,6 @@ define("examples/accessibility", ["require", "exports", "openlayers", "ol3-layer
         layerSwitcher.on("hide-layer", function (args) {
             console.log("hide layer:", args.layer.get("title"));
         });
-        map.addControl(layerSwitcher);
         layerSwitcher.showPanel();
     }
     exports.run = run;
@@ -947,8 +1031,12 @@ define("ol3-layerswitcher/extras/ajax", ["require", "exports", "jquery"], functi
             if (url === void 0) { url = this.url; }
             var d = $.Deferred();
             args["callback"] = "define";
-            var uri = url + "?" + Object.keys(args).map(function (k) { return k + "=" + args[k]; }).join('&');
-            require([uri], function (data) { return d.resolve(data); });
+            var uri = url +
+                "?" +
+                Object.keys(args)
+                    .map(function (k) { return k + "=" + args[k]; })
+                    .join("&");
+            requirejs([uri], function (data) { return d.resolve(data); });
             return d;
         };
         Ajax.prototype.ajax = function (method, args, url) {
@@ -967,14 +1055,14 @@ define("ol3-layerswitcher/extras/ajax", ["require", "exports", "jquery"], functi
                     data = JSON.stringify(args);
                 }
                 else {
-                    uri += '?';
+                    uri += "?";
                     var argcount = 0;
                     for (var key in args) {
                         if (args.hasOwnProperty(key)) {
                             if (argcount++) {
-                                uri += '&';
+                                uri += "&";
                             }
-                            uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
+                            uri += encodeURIComponent(key) + "=" + encodeURIComponent(args[key]);
                         }
                     }
                 }
@@ -997,16 +1085,16 @@ define("ol3-layerswitcher/extras/ajax", ["require", "exports", "jquery"], functi
             return d;
         };
         Ajax.prototype.get = function (args) {
-            return this.ajax('GET', args);
+            return this.ajax("GET", args);
         };
         Ajax.prototype.post = function (args) {
-            return this.ajax('POST', args);
+            return this.ajax("POST", args);
         };
         Ajax.prototype.put = function (args) {
-            return this.ajax('PUT', args);
+            return this.ajax("PUT", args);
         };
         Ajax.prototype.delete = function (args) {
-            return this.ajax('DELETE', args);
+            return this.ajax("DELETE", args);
         };
         return Ajax;
     }());
@@ -1329,12 +1417,12 @@ define("ol3-layerswitcher/extras/ags-layer-factory", ["require", "exports", "ope
     }());
     exports.AgsLayerFactory = AgsLayerFactory;
 });
-define("examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-catalog", "proj4", "ol3-layerswitcher/extras/ags-layer-factory", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, ol3_layerswitcher_2, AgsDiscovery, proj4, ags_layer_factory_1, common_3) {
+define("examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layerswitcher/ol3-layerswitcher", "ol3-layerswitcher/extras/ags-catalog", "proj4", "ol3-layerswitcher/extras/ags-layer-factory", "node_modules/ol3-fun/index"], function (require, exports, ol, ol3_layerswitcher_2, AgsDiscovery, proj4, ags_layer_factory_1, index_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         ol.proj.proj4.register(proj4);
-        common_3.cssin("ags-discovery", "\n.ol-control.layer-switcher li.layer label {\n    word-wrap: break-word;\n    max-width: 120pt;\n    border: 1px solid transparent;\n    padding: 2px;\n}\n\n.ol-control.layer-switcher li.layer:after {\n    content: \" \";\n    white-space: pre;\n    min-width: 20pt;\n\n    position: absolute;\n    padding-top: 2px;\n    right: 0;\n}\n\n.ol-control.layer-switcher li.layer label:hover {\n    border: 1px solid rgba(0, 0, 0,0.2);\n}\n");
+        index_2.cssin("ags-discovery", "\n.ol-control.layer-switcher li.layer label {\n    word-wrap: break-word;\n    max-width: 120pt;\n    border: 1px solid transparent;\n    padding: 2px;\n}\n\n.ol-control.layer-switcher li.layer:after {\n    content: \" \";\n    white-space: pre;\n    min-width: 20pt;\n\n    position: absolute;\n    padding-top: 2px;\n    right: 0;\n}\n\n.ol-control.layer-switcher li.layer label:hover {\n    border: 1px solid rgba(0, 0, 0,0.2);\n}\n");
         function asRes(scale, dpi) {
             if (dpi === void 0) { dpi = 90.71428571428572; }
             var inchesPerFoot = 12.0;
@@ -1349,11 +1437,10 @@ define("examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layer
             layers: [],
             view: new ol.View({
                 center: ol.proj.transform([-85, 35], "EPSG:4326", "EPSG:3857"),
-                zoom: 6,
-            }),
+                zoom: 6
+            })
         });
-        var layerSwitcher = new ol3_layerswitcher_2.LayerSwitcher({});
-        map.addControl(layerSwitcher);
+        var layerSwitcher = ol3_layerswitcher_2.LayerSwitcher.create({ map: map });
         layerSwitcher.showPanel();
         var refresh = function () {
             if (!layerSwitcher.isVisible())
@@ -1379,7 +1466,7 @@ define("examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layer
             var rootGroup = new ol.layer.Group({
                 title: "sampleserver1",
                 visible: true,
-                layers: [],
+                layers: []
             });
             map.addLayer(rootGroup);
             refresh();
@@ -1398,7 +1485,7 @@ define("examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layer
                         var folderGroup = new ol.layer.Group({
                             title: f,
                             visible: true,
-                            layers: [],
+                            layers: []
                         });
                         service.aboutFolder(f).then(function (folderInfo) {
                             var folders = folderInfo.folders;
@@ -1437,7 +1524,7 @@ define("examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layer
                                             visibility: false,
                                             opacity: 1,
                                             title: serviceInfo.name,
-                                            spatialReference: inSrs,
+                                            spatialReference: inSrs
                                         });
                                         folderGroup.getLayers().push(layer);
                                         refresh();
@@ -1447,15 +1534,15 @@ define("examples/ags-discovery", ["require", "exports", "openlayers", "ol3-layer
                                             var source = new ol.source.TileArcGISRest({
                                                 url: p.url,
                                                 params: {
-                                                    layers: "show:" + layerInfo.id,
-                                                },
+                                                    layers: "show:" + layerInfo.id
+                                                }
                                             });
                                             var tileOptions = {
                                                 id: serviceInfo.name + "/" + layerInfo.id,
                                                 title: layerInfo.name,
                                                 visible: false,
                                                 extent: extent,
-                                                source: source,
+                                                source: source
                                             };
                                             if (layerInfo.minScale)
                                                 tileOptions.maxResolution = asRes(layerInfo.minScale);
@@ -1531,7 +1618,7 @@ define("examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswi
                 zoom: 6
             })
         });
-        var layerSwitcher = new ol3_layerswitcher_3.LayerSwitcher({});
+        var layerSwitcher = ol3_layerswitcher_3.LayerSwitcher.create({ map: map });
         layerSwitcher.on("show-layer", function (args) {
             console.log("show layer:", args.layer.get("title"));
             if (args.layer.get("extent")) {
@@ -1546,7 +1633,6 @@ define("examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswi
         layerSwitcher.on("hide-layer", function (args) {
             console.log("hide layer:", args.layer.get("title"));
         });
-        map.addControl(layerSwitcher);
         function webmap(options) {
             var webmap = new WebMap.WebMap();
             var webmapGroup = new ol.layer.Group({
@@ -1555,9 +1641,7 @@ define("examples/ags-webmap", ["require", "exports", "openlayers", "ol3-layerswi
                 layers: []
             });
             map.addLayer(webmapGroup);
-            options.url =
-                options.url ||
-                    "https://www.arcgis.com/sharing/rest/content/items/" + options.appid + "/data?f=json";
+            options.url = options.url || "https://www.arcgis.com/sharing/rest/content/items/" + options.appid + "/data?f=json";
             webmap.get(options.url).then(function (result) {
                 if (result.baseMap) {
                     var baseLayers_1 = new ol.layer.Group({
@@ -1630,18 +1714,18 @@ define("examples/layerswitcher", ["require", "exports", "openlayers", "ol3-layer
                                     type: "base",
                                     visible: false,
                                     source: new ol.source.Stamen({
-                                        layer: "watercolor",
-                                    }),
+                                        layer: "watercolor"
+                                    })
                                 }),
                                 new ol.layer.Tile({
                                     title: "OSM",
                                     type: "base",
                                     visible: true,
-                                    source: new ol.source.OSM(),
-                                }),
-                            ],
-                        }),
-                    ],
+                                    source: new ol.source.OSM()
+                                })
+                            ]
+                        })
+                    ]
                 }),
                 new ol.layer.Group({
                     title: "Overlays",
@@ -1654,28 +1738,29 @@ define("examples/layerswitcher", ["require", "exports", "openlayers", "ol3-layer
                                     source: new ol.source.TileWMS({
                                         url: "http://geo.vliz.be/geoserver/MarineRegions/wms",
                                         params: {
-                                            LAYERS: "MarineRegions:worldheritagemarineprogramme",
+                                            LAYERS: "MarineRegions:worldheritagemarineprogramme"
                                         },
-                                        serverType: "geoserver",
-                                    }),
-                                }),
-                            ],
-                        }),
-                    ],
-                }),
+                                        serverType: "geoserver"
+                                    })
+                                })
+                            ]
+                        })
+                    ]
+                })
             ],
             view: new ol.View({
                 center: ol.proj.transform([-85, 35], "EPSG:4326", "EPSG:3857"),
-                zoom: 6,
-            }),
+                zoom: 6
+            })
         });
-        var layerSwitcher = new ol3_layerswitcher_4.LayerSwitcher({
+        var layerSwitcher = ol3_layerswitcher_4.LayerSwitcher.create({
+            map: map,
             tipLabel: "Layers",
             openOnMouseOver: true,
             closeOnMouseOut: true,
             openOnClick: false,
             closeOnClick: true,
-            target: null,
+            target: null
         });
         layerSwitcher.on("show-layer", function (args) {
             console.log("show layer:", args.layer.get("title"));
@@ -1684,7 +1769,6 @@ define("examples/layerswitcher", ["require", "exports", "openlayers", "ol3-layer
             console.log("hide layer:", args.layer.get("title"));
             return true;
         });
-        map.addControl(layerSwitcher);
     }
     exports.run = run;
 });

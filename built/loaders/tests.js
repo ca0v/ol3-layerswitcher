@@ -46,7 +46,7 @@
         ? "../../node_modules/ol3-fun/static/ol/v5.1.3/ol.css"
         : "https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.1.3/css/ol.css");
     if (isTest) {
-        cssin("map, .map { position: initial; width: 400px; height: 400px; border: 1px solid black;}");
+        cssin("map, .map { top: auto; left: auto; width: 400px; height: 400px; border: 1px solid silver;}");
     }
     if (isRun) {
         cssin("head,body,.map {\n\t\t\tposition: absolute;\n\t\t\ttop: 0;\n\t\t\tleft: 0;\n\t\t\tbottom: 0;\n\t\t\tright: 0;\n\t\t}\n\t\t\n\t\t");
@@ -64,7 +64,10 @@
         paths: {
             openlayers: localhost
                 ? "../../node_modules/ol3-fun/static/ol/v5.1.3/ol"
-                : "https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.1.3/build/ol"
+                : "https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.1.3/build/ol",
+            proj4: localhost
+                ? "../../node_modules/proj4/dist/proj4"
+                : "https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.5.0/proj4"
         },
         packages: [
             {
@@ -95,7 +98,14 @@
                     for (var _i = 0; _i < arguments.length; _i++) {
                         tests[_i] = arguments[_i];
                     }
-                    return tests.forEach(function (test) { return test.run(); });
+                    return tests.forEach(function (test) {
+                        if (test.run) {
+                            test.run();
+                        }
+                        else {
+                            document.writeln(Object.keys(test).join("<br/>"));
+                        }
+                    });
                 });
             }
             if (isTest) {

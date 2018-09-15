@@ -107,26 +107,6 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         return a;
     }
     exports.defaults = defaults;
-    function cssin(name, css) {
-        var id = "style-" + name;
-        var styleTag = document.getElementById(id);
-        if (!styleTag) {
-            styleTag = document.createElement("style");
-            styleTag.id = id;
-            styleTag.type = "text/css";
-            document.head.appendChild(styleTag);
-            styleTag.appendChild(document.createTextNode(css));
-        }
-        var dataset = styleTag.dataset;
-        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
-        return function () {
-            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
-            if (dataset["count"] === "0") {
-                styleTag.remove();
-            }
-        };
-    }
-    exports.cssin = cssin;
     function debounce(func, wait, immediate) {
         if (wait === void 0) { wait = 50; }
         if (immediate === void 0) { immediate = false; }
@@ -183,6 +163,58 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         return array;
     }
     exports.shuffle = shuffle;
+});
+define("node_modules/ol3-fun/ol3-fun/css", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function cssin(name, css) {
+        var id = "style-" + name;
+        var styleTag = document.getElementById(id);
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = id;
+            styleTag.type = "text/css";
+            document.head.appendChild(styleTag);
+            styleTag.appendChild(document.createTextNode(css));
+        }
+        var dataset = styleTag.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                styleTag.remove();
+            }
+        };
+    }
+    exports.cssin = cssin;
+    function loadCss(options) {
+        if (!options.url && !options.css)
+            throw "must provide either a url or css option";
+        if (options.url && options.css)
+            throw "cannot provide both a url and a css";
+        if (options.name && options.css)
+            return cssin(options.name, options.css);
+        var id = "style-" + options.name;
+        var head = document.getElementsByTagName("head")[0];
+        var link = document.getElementById(id);
+        if (!link) {
+            link = document.createElement("link");
+            link.id = id;
+            link.type = "text/css";
+            link.rel = "stylesheet";
+            link.href = options.url;
+            head.appendChild(link);
+        }
+        var dataset = link.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                link.remove();
+            }
+        };
+    }
+    exports.loadCss = loadCss;
 });
 define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, $, common_1) {
     "use strict";
@@ -408,14 +440,13 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function extend(a, b, trace, history) {
-        if (trace === void 0) { trace = []; }
         if (history === void 0) { history = []; }
         if (!b) {
             b = a;
             a = {};
         }
         var merger = new Merger(trace, history);
-        return merger.deepExtend(a, b);
+        return merger.deepExtend(a, b, []);
     }
     exports.extend = extend;
     function isUndefined(a) {
@@ -442,11 +473,17 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
         throw "unclonable type encounted: " + typeof val;
     }
     var Merger = (function () {
-        function Merger(trace, history) {
-            this.trace = trace;
+        function Merger(traceItems, history) {
+            this.traceItems = traceItems;
             this.history = history;
         }
-        Merger.prototype.deepExtend = function (target, source) {
+        Merger.prototype.trace = function (item) {
+            if (this.traceItems) {
+                this.traceItems.push(item);
+            }
+            return item.path;
+        };
+        Merger.prototype.deepExtend = function (target, source, path) {
             var _this = this;
             if (target === source)
                 return target;
@@ -464,19 +501,29 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                 if (!isArray(target)) {
                     throw "attempting to merge an array into a non-array";
                 }
-                this.merge("id", target, source);
+                this.mergeArray("id", target, source, path);
                 return target;
             }
             else if (isArray(target)) {
                 throw "attempting to merge a non-array into an array";
             }
-            Object.keys(source).forEach(function (k) { return _this.mergeChild(k, target, source[k]); });
+            Object.keys(source).forEach(function (k) { return _this.mergeChild(k, target, source[k], [k].concat(path)); });
             return target;
         };
-        Merger.prototype.cloneArray = function (val) {
+        Merger.prototype.cloneArray = function (val, path) {
             var _this = this;
             this.push(val);
-            return val.map(function (v) { return (isArray(v) ? _this.cloneArray(v) : canClone(v) ? clone(v) : v); });
+            return val.map(function (v) {
+                if (is_primitive_2.isPrimitive(v))
+                    return v;
+                if (isHash(v))
+                    return _this.deepExtend({}, v, path);
+                if (isArray(v))
+                    return _this.cloneArray(v, path);
+                if (canClone(v))
+                    return clone(v);
+                throw "unknown type encountered: " + typeof v;
+            });
         };
         Merger.prototype.push = function (a) {
             if (is_primitive_2.isPrimitive(a))
@@ -489,12 +536,13 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
             else
                 this.history.push(a);
         };
-        Merger.prototype.mergeChild = function (key, target, sourceValue) {
+        Merger.prototype.mergeChild = function (key, target, sourceValue, path) {
             var targetValue = target[key];
             if (sourceValue === targetValue)
                 return;
             if (is_primitive_2.isPrimitive(sourceValue)) {
-                this.trace.push({
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -505,7 +553,8 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
             }
             if (canClone(sourceValue)) {
                 sourceValue = clone(sourceValue);
-                this.trace.push({
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -516,11 +565,12 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
             }
             if (isArray(sourceValue)) {
                 if (isArray(targetValue)) {
-                    this.deepExtend(targetValue, sourceValue);
+                    this.deepExtend(targetValue, sourceValue, path);
                     return;
                 }
-                sourceValue = this.cloneArray(sourceValue);
-                this.trace.push({
+                sourceValue = this.cloneArray(sourceValue, path);
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -533,14 +583,10 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                 throw "unexpected source type: " + typeof sourceValue;
             }
             if (!isHash(targetValue)) {
-                var traceIndex = this.trace.length;
-                try {
-                    sourceValue = this.deepExtend({}, sourceValue);
-                }
-                finally {
-                    this.trace.splice(traceIndex, this.trace.length - traceIndex);
-                }
-                this.trace.push({
+                var merger = new Merger(null, this.history);
+                sourceValue = merger.deepExtend({}, sourceValue, path);
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -549,10 +595,10 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                 target[key] = sourceValue;
                 return;
             }
-            this.deepExtend(targetValue, sourceValue);
+            this.deepExtend(targetValue, sourceValue, path);
             return;
         };
-        Merger.prototype.merge = function (key, target, source) {
+        Merger.prototype.mergeArray = function (key, target, source, path) {
             var _this = this;
             if (!isArray(target))
                 throw "target must be an array";
@@ -573,14 +619,14 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                     if (isHash(target[i]) && !!target[i][key]) {
                         throw "cannot replace an identified array item with a non-identified array item";
                     }
-                    _this.mergeChild(i, target, sourceItem);
+                    _this.mergeChild(i, target, sourceItem, path);
                     return;
                 }
                 if (isUndefined(targetIndex)) {
-                    _this.mergeChild(target.length, target, sourceItem);
+                    _this.mergeChild(target.length, target, sourceItem, path);
                     return;
                 }
-                _this.mergeChild(targetIndex, target, sourceItem);
+                _this.mergeChild(targetIndex, target, sourceItem, path);
                 return;
             });
             return target;
@@ -588,11 +634,12 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
         return Merger;
     }());
 });
-define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop", "node_modules/ol3-fun/ol3-fun/deep-extend"], function (require, exports, common_2, navigation_1, parse_dms_1, slowloop_1, deep_extend_1) {
+define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/css", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop", "node_modules/ol3-fun/ol3-fun/deep-extend"], function (require, exports, common_2, css_1, navigation_1, parse_dms_1, slowloop_1, deep_extend_1) {
     "use strict";
     var index = {
         asArray: common_2.asArray,
-        cssin: common_2.cssin,
+        cssin: css_1.cssin,
+        loadCss: css_1.loadCss,
         debounce: common_2.debounce,
         defaults: common_2.defaults,
         doif: common_2.doif,
@@ -622,6 +669,12 @@ define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fu
 define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers", "node_modules/ol3-fun/index"], function (require, exports, ol, index_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    var olcss = {
+        CLASS_CONTROL: "ol-control",
+        CLASS_UNSELECTABLE: "ol-unselectable",
+        CLASS_UNSUPPORTED: "ol-unsupported",
+        CLASS_HIDDEN: "ol-hidden"
+    };
     function allLayers(lyr) {
         var result = [];
         lyr.getLayers().forEach(function (lyr, idx, a) {
@@ -632,6 +685,11 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         });
         return result;
     }
+    var eventNames = {
+        dispose: "dispose",
+        hide: "hide",
+        show: "show"
+    };
     exports.DEFAULT_OPTIONS = {
         tipLabel: "Layers",
         openOnMouseOver: false,
@@ -639,6 +697,8 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         openOnClick: true,
         closeOnClick: true,
         className: "layer-switcher",
+        position: "bottom-2 right-2",
+        expanded: false,
         target: null
     };
     var LayerSwitcher = (function (_super) {
@@ -648,14 +708,38 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
             options = index_1.defaults(options || {}, exports.DEFAULT_OPTIONS);
             _this = _super.call(this, options) || this;
             _this.options = options;
+            _this.unwatch = [];
             _this.afterCreate();
             return _this;
         }
+        LayerSwitcher.create = function (options) {
+            index_1.loadCss({ name: "ol3-layerswitcher", url: "../ol3-layerswitcher/css/ol3-layerswitcher.css" });
+            return new LayerSwitcher(options);
+        };
+        LayerSwitcher.prototype.destroy = function () {
+            this.hidePanel();
+            this.unwatch = [];
+            this.getMap() && this.getMap().removeControl(this);
+            this.dispatchEvent(eventNames.dispose);
+            this.setTarget(null);
+        };
+        LayerSwitcher.prototype.setPosition = function (position) {
+            var _this = this;
+            this.options.position.split(" ").forEach(function (k) { return _this.options.target.classList.remove(k); });
+            position.split(" ").forEach(function (k) { return _this.options.target.classList.add(k); });
+            this.options.position = position;
+        };
+        LayerSwitcher.prototype.cssin = function () {
+            var className = this.options.className;
+            var positions = index_1.pair("top left right bottom".split(" "), index_1.range(24)).map(function (pos) { return "." + className + "." + (pos[0] + (-pos[1] || "")) + " { " + pos[0] + ":" + (0.5 + pos[1]) + "em; }"; });
+            index_1.cssin(className, positions.join("\n"));
+        };
         LayerSwitcher.prototype.afterCreate = function () {
             var _this = this;
             var options = this.options;
-            this.hiddenClassName = "ol-unselectable ol-control " + options.className;
+            this.hiddenClassName = options.className + " " + options.position + " " + olcss.CLASS_UNSELECTABLE + " " + olcss.CLASS_CONTROL;
             this.shownClassName = this.hiddenClassName + " shown";
+            this.cssin();
             var element = document.createElement("div");
             element.className = this.hiddenClassName;
             var button = (this.button = document.createElement("button"));
@@ -664,7 +748,6 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
             this.panel = document.createElement("div");
             this.panel.className = "panel";
             element.appendChild(this.panel);
-            this.unwatch = [];
             this.element = element;
             this.setTarget(options.target);
             if (options.openOnMouseOver) {
@@ -675,12 +758,11 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
             }
             if (options.openOnClick || options.closeOnClick) {
                 button.addEventListener("click", function (e) {
-                    _this.isVisible()
-                        ? options.closeOnClick && _this.hidePanel()
-                        : options.openOnClick && _this.showPanel();
+                    _this.isVisible() ? options.closeOnClick && _this.hidePanel() : options.openOnClick && _this.showPanel();
                     e.preventDefault();
                 });
             }
+            options.map && this.setMap(options.map);
         };
         LayerSwitcher.prototype.isVisible = function () {
             return this.element.className != this.hiddenClassName;
@@ -694,6 +776,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         LayerSwitcher.prototype.hidePanel = function () {
             this.element.className = this.hiddenClassName;
             this.unwatch.forEach(function (f) { return f(); });
+            this.unwatch = [];
         };
         LayerSwitcher.prototype.renderPanel = function () {
             var _this = this;
@@ -770,9 +853,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                         index_1.toggle(ul_1, "hide-layer-group", !input_1.checked);
                         _this.setVisible(lyr, input_1.checked);
                         var childLayers = lyr.getLayers();
-                        _this.state
-                            .filter(function (s) { return s.container === ul_1 && s.input && s.input.checked; })
-                            .forEach(function (state) {
+                        _this.state.filter(function (s) { return s.container === ul_1 && s.input && s.input.checked; }).forEach(function (state) {
                             _this.setVisible(state.layer, input_1.checked);
                         });
                     });
@@ -830,6 +911,9 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                 .slice()
                 .reverse();
             return lyrs.filter(function (l) { return !!l.get("title"); }).forEach(function (l) { return _this.renderLayer(l, elm); });
+        };
+        LayerSwitcher.prototype.addLayer = function (layer, title) {
+            layer.set("title", title);
         };
         return LayerSwitcher;
     }(ol.control.Control));

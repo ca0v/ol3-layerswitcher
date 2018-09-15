@@ -2,7 +2,7 @@
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"declaration": false,
-		"outFile": "../built/tests/spec/index.js"
+		"outFile": "../built/tests.max.js"
 	},
 	"include": ["index.ts", "**/*.ts"]
 }

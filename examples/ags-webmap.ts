@@ -49,31 +49,23 @@ export function run() {
 		})
 	});
 
-	let layerSwitcher = new LayerSwitcher(<any>{});
+	let layerSwitcher = LayerSwitcher.create({ map: map });
 
-	layerSwitcher.on(
-		"show-layer",
-		(args: ol.events.Event & { layer: ol.layer.Base }) => {
-			console.log("show layer:", args.layer.get("title"));
-			if (args.layer.get("extent")) {
-				let view = map.getView();
-				let extent = <ol.Extent>args.layer.get("extent");
-				let currentExtent = view.calculateExtent(map.getSize());
-				if (!ol.extent.intersects(currentExtent, extent)) {
-					view.fit(extent, { size: map.getSize() });
-				}
+	layerSwitcher.on("show-layer", (args: ol.events.Event & { layer: ol.layer.Base }) => {
+		console.log("show layer:", args.layer.get("title"));
+		if (args.layer.get("extent")) {
+			let view = map.getView();
+			let extent = <ol.Extent>args.layer.get("extent");
+			let currentExtent = view.calculateExtent(map.getSize());
+			if (!ol.extent.intersects(currentExtent, extent)) {
+				view.fit(extent, { size: map.getSize() });
 			}
 		}
-	);
+	});
 
-	layerSwitcher.on(
-		"hide-layer",
-		(args: ol.events.Event & { layer: ol.layer.Base }) => {
-			console.log("hide layer:", args.layer.get("title"));
-		}
-	);
-
-	map.addControl(layerSwitcher);
+	layerSwitcher.on("hide-layer", (args: ol.events.Event & { layer: ol.layer.Base }) => {
+		console.log("hide layer:", args.layer.get("title"));
+	});
 
 	function webmap(options: { appid?: string; url?: string }) {
 		let webmap = new WebMap.WebMap();
@@ -85,11 +77,7 @@ export function run() {
 		});
 		map.addLayer(webmapGroup);
 
-		options.url =
-			options.url ||
-			`https://www.arcgis.com/sharing/rest/content/items/${
-				options.appid
-			}/data?f=json`;
+		options.url = options.url || `https://www.arcgis.com/sharing/rest/content/items/${options.appid}/data?f=json`;
 
 		webmap.get(options.url).then(result => {
 			if (result.baseMap) {
@@ -101,10 +89,7 @@ export function run() {
 				webmapGroup.getLayers().push(baseLayers);
 
 				result.baseMap.baseMapLayers.forEach(l => {
-					let opLayer = agsLayerFactory.asArcGISTiledMapServiceLayer(
-						l,
-						result
-					);
+					let opLayer = agsLayerFactory.asArcGISTiledMapServiceLayer(l, result);
 					baseLayers.getLayers().push(opLayer);
 				});
 			}
@@ -121,14 +106,10 @@ export function run() {
 					let opLayer = agsLayerFactory.asAgsLayer(l, result);
 					if (opLayer instanceof ol.layer.Vector) {
 						opLayer.setStyle((feature: ol.Feature) => {
-							let size = feature.get(
-								"Total_people_involved"
-							) as number;
+							let size = feature.get("Total_people_involved") as number;
 							let style = DEFAULT_STYLE.clone();
 							if (size) {
-								(style.getImage() as ol.style.Circle).setRadius(
-									Math.max(4, Math.min(100, size))
-								);
+								(style.getImage() as ol.style.Circle).setRadius(Math.max(4, Math.min(100, size)));
 								let text = new ol.style.Text({
 									text: size + "",
 									fill: new ol.style.Fill({ color: "white" }),
@@ -150,7 +131,6 @@ export function run() {
 	}
 
 	webmap({
-		url:
-			"https://infor1.maps.arcgis.com/sharing/rest/content/items/313b7327133f4802affee46893b4bec7/data?f=json"
+		url: "https://infor1.maps.arcgis.com/sharing/rest/content/items/313b7327133f4802affee46893b4bec7/data?f=json"
 	});
 }

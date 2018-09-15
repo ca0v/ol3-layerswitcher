@@ -187,26 +187,6 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         return a;
     }
     exports.defaults = defaults;
-    function cssin(name, css) {
-        var id = "style-" + name;
-        var styleTag = document.getElementById(id);
-        if (!styleTag) {
-            styleTag = document.createElement("style");
-            styleTag.id = id;
-            styleTag.type = "text/css";
-            document.head.appendChild(styleTag);
-            styleTag.appendChild(document.createTextNode(css));
-        }
-        var dataset = styleTag.dataset;
-        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
-        return function () {
-            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
-            if (dataset["count"] === "0") {
-                styleTag.remove();
-            }
-        };
-    }
-    exports.cssin = cssin;
     function debounce(func, wait, immediate) {
         if (wait === void 0) { wait = 50; }
         if (immediate === void 0) { immediate = false; }
@@ -263,6 +243,58 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         return array;
     }
     exports.shuffle = shuffle;
+});
+define("node_modules/ol3-fun/ol3-fun/css", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function cssin(name, css) {
+        var id = "style-" + name;
+        var styleTag = document.getElementById(id);
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = id;
+            styleTag.type = "text/css";
+            document.head.appendChild(styleTag);
+            styleTag.appendChild(document.createTextNode(css));
+        }
+        var dataset = styleTag.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                styleTag.remove();
+            }
+        };
+    }
+    exports.cssin = cssin;
+    function loadCss(options) {
+        if (!options.url && !options.css)
+            throw "must provide either a url or css option";
+        if (options.url && options.css)
+            throw "cannot provide both a url and a css";
+        if (options.name && options.css)
+            return cssin(options.name, options.css);
+        var id = "style-" + options.name;
+        var head = document.getElementsByTagName("head")[0];
+        var link = document.getElementById(id);
+        if (!link) {
+            link = document.createElement("link");
+            link.id = id;
+            link.type = "text/css";
+            link.rel = "stylesheet";
+            link.href = options.url;
+            head.appendChild(link);
+        }
+        var dataset = link.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                link.remove();
+            }
+        };
+    }
+    exports.loadCss = loadCss;
 });
 define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, $, common_1) {
     "use strict";
@@ -453,14 +485,13 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function extend(a, b, trace, history) {
-        if (trace === void 0) { trace = []; }
         if (history === void 0) { history = []; }
         if (!b) {
             b = a;
             a = {};
         }
         var merger = new Merger(trace, history);
-        return merger.deepExtend(a, b);
+        return merger.deepExtend(a, b, []);
     }
     exports.extend = extend;
     function isUndefined(a) {
@@ -487,11 +518,17 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
         throw "unclonable type encounted: " + typeof val;
     }
     var Merger = (function () {
-        function Merger(trace, history) {
-            this.trace = trace;
+        function Merger(traceItems, history) {
+            this.traceItems = traceItems;
             this.history = history;
         }
-        Merger.prototype.deepExtend = function (target, source) {
+        Merger.prototype.trace = function (item) {
+            if (this.traceItems) {
+                this.traceItems.push(item);
+            }
+            return item.path;
+        };
+        Merger.prototype.deepExtend = function (target, source, path) {
             var _this = this;
             if (target === source)
                 return target;
@@ -509,19 +546,29 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                 if (!isArray(target)) {
                     throw "attempting to merge an array into a non-array";
                 }
-                this.merge("id", target, source);
+                this.mergeArray("id", target, source, path);
                 return target;
             }
             else if (isArray(target)) {
                 throw "attempting to merge a non-array into an array";
             }
-            Object.keys(source).forEach(function (k) { return _this.mergeChild(k, target, source[k]); });
+            Object.keys(source).forEach(function (k) { return _this.mergeChild(k, target, source[k], [k].concat(path)); });
             return target;
         };
-        Merger.prototype.cloneArray = function (val) {
+        Merger.prototype.cloneArray = function (val, path) {
             var _this = this;
             this.push(val);
-            return val.map(function (v) { return (isArray(v) ? _this.cloneArray(v) : canClone(v) ? clone(v) : v); });
+            return val.map(function (v) {
+                if (is_primitive_2.isPrimitive(v))
+                    return v;
+                if (isHash(v))
+                    return _this.deepExtend({}, v, path);
+                if (isArray(v))
+                    return _this.cloneArray(v, path);
+                if (canClone(v))
+                    return clone(v);
+                throw "unknown type encountered: " + typeof v;
+            });
         };
         Merger.prototype.push = function (a) {
             if (is_primitive_2.isPrimitive(a))
@@ -534,12 +581,13 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
             else
                 this.history.push(a);
         };
-        Merger.prototype.mergeChild = function (key, target, sourceValue) {
+        Merger.prototype.mergeChild = function (key, target, sourceValue, path) {
             var targetValue = target[key];
             if (sourceValue === targetValue)
                 return;
             if (is_primitive_2.isPrimitive(sourceValue)) {
-                this.trace.push({
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -550,7 +598,8 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
             }
             if (canClone(sourceValue)) {
                 sourceValue = clone(sourceValue);
-                this.trace.push({
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -561,11 +610,12 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
             }
             if (isArray(sourceValue)) {
                 if (isArray(targetValue)) {
-                    this.deepExtend(targetValue, sourceValue);
+                    this.deepExtend(targetValue, sourceValue, path);
                     return;
                 }
-                sourceValue = this.cloneArray(sourceValue);
-                this.trace.push({
+                sourceValue = this.cloneArray(sourceValue, path);
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -578,14 +628,10 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                 throw "unexpected source type: " + typeof sourceValue;
             }
             if (!isHash(targetValue)) {
-                var traceIndex = this.trace.length;
-                try {
-                    sourceValue = this.deepExtend({}, sourceValue);
-                }
-                finally {
-                    this.trace.splice(traceIndex, this.trace.length - traceIndex);
-                }
-                this.trace.push({
+                var merger = new Merger(null, this.history);
+                sourceValue = merger.deepExtend({}, sourceValue, path);
+                path = this.trace({
+                    path: path,
                     key: key,
                     target: target,
                     was: targetValue,
@@ -594,10 +640,10 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                 target[key] = sourceValue;
                 return;
             }
-            this.deepExtend(targetValue, sourceValue);
+            this.deepExtend(targetValue, sourceValue, path);
             return;
         };
-        Merger.prototype.merge = function (key, target, source) {
+        Merger.prototype.mergeArray = function (key, target, source, path) {
             var _this = this;
             if (!isArray(target))
                 throw "target must be an array";
@@ -618,14 +664,14 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
                     if (isHash(target[i]) && !!target[i][key]) {
                         throw "cannot replace an identified array item with a non-identified array item";
                     }
-                    _this.mergeChild(i, target, sourceItem);
+                    _this.mergeChild(i, target, sourceItem, path);
                     return;
                 }
                 if (isUndefined(targetIndex)) {
-                    _this.mergeChild(target.length, target, sourceItem);
+                    _this.mergeChild(target.length, target, sourceItem, path);
                     return;
                 }
-                _this.mergeChild(targetIndex, target, sourceItem);
+                _this.mergeChild(targetIndex, target, sourceItem, path);
                 return;
             });
             return target;
@@ -633,11 +679,12 @@ define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_
         return Merger;
     }());
 });
-define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop", "node_modules/ol3-fun/ol3-fun/deep-extend"], function (require, exports, common_2, navigation_1, parse_dms_1, slowloop_2, deep_extend_1) {
+define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/css", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop", "node_modules/ol3-fun/ol3-fun/deep-extend"], function (require, exports, common_2, css_1, navigation_1, parse_dms_1, slowloop_2, deep_extend_1) {
     "use strict";
     var index = {
         asArray: common_2.asArray,
-        cssin: common_2.cssin,
+        cssin: css_1.cssin,
+        loadCss: css_1.loadCss,
         debounce: common_2.debounce,
         defaults: common_2.defaults,
         doif: common_2.doif,
@@ -667,6 +714,12 @@ define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fu
 define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers", "node_modules/ol3-fun/index"], function (require, exports, ol, index_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    var olcss = {
+        CLASS_CONTROL: "ol-control",
+        CLASS_UNSELECTABLE: "ol-unselectable",
+        CLASS_UNSUPPORTED: "ol-unsupported",
+        CLASS_HIDDEN: "ol-hidden"
+    };
     function allLayers(lyr) {
         var result = [];
         lyr.getLayers().forEach(function (lyr, idx, a) {
@@ -677,6 +730,11 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         });
         return result;
     }
+    var eventNames = {
+        dispose: "dispose",
+        hide: "hide",
+        show: "show"
+    };
     exports.DEFAULT_OPTIONS = {
         tipLabel: "Layers",
         openOnMouseOver: false,
@@ -684,6 +742,8 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         openOnClick: true,
         closeOnClick: true,
         className: "layer-switcher",
+        position: "bottom-2 right-2",
+        expanded: false,
         target: null
     };
     var LayerSwitcher = (function (_super) {
@@ -693,14 +753,38 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
             options = index_1.defaults(options || {}, exports.DEFAULT_OPTIONS);
             _this = _super.call(this, options) || this;
             _this.options = options;
+            _this.unwatch = [];
             _this.afterCreate();
             return _this;
         }
+        LayerSwitcher.create = function (options) {
+            index_1.loadCss({ name: "ol3-layerswitcher", url: "../ol3-layerswitcher/css/ol3-layerswitcher.css" });
+            return new LayerSwitcher(options);
+        };
+        LayerSwitcher.prototype.destroy = function () {
+            this.hidePanel();
+            this.unwatch = [];
+            this.getMap() && this.getMap().removeControl(this);
+            this.dispatchEvent(eventNames.dispose);
+            this.setTarget(null);
+        };
+        LayerSwitcher.prototype.setPosition = function (position) {
+            var _this = this;
+            this.options.position.split(" ").forEach(function (k) { return _this.options.target.classList.remove(k); });
+            position.split(" ").forEach(function (k) { return _this.options.target.classList.add(k); });
+            this.options.position = position;
+        };
+        LayerSwitcher.prototype.cssin = function () {
+            var className = this.options.className;
+            var positions = index_1.pair("top left right bottom".split(" "), index_1.range(24)).map(function (pos) { return "." + className + "." + (pos[0] + (-pos[1] || "")) + " { " + pos[0] + ":" + (0.5 + pos[1]) + "em; }"; });
+            index_1.cssin(className, positions.join("\n"));
+        };
         LayerSwitcher.prototype.afterCreate = function () {
             var _this = this;
             var options = this.options;
-            this.hiddenClassName = "ol-unselectable ol-control " + options.className;
+            this.hiddenClassName = options.className + " " + options.position + " " + olcss.CLASS_UNSELECTABLE + " " + olcss.CLASS_CONTROL;
             this.shownClassName = this.hiddenClassName + " shown";
+            this.cssin();
             var element = document.createElement("div");
             element.className = this.hiddenClassName;
             var button = (this.button = document.createElement("button"));
@@ -709,7 +793,6 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
             this.panel = document.createElement("div");
             this.panel.className = "panel";
             element.appendChild(this.panel);
-            this.unwatch = [];
             this.element = element;
             this.setTarget(options.target);
             if (options.openOnMouseOver) {
@@ -720,12 +803,11 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
             }
             if (options.openOnClick || options.closeOnClick) {
                 button.addEventListener("click", function (e) {
-                    _this.isVisible()
-                        ? options.closeOnClick && _this.hidePanel()
-                        : options.openOnClick && _this.showPanel();
+                    _this.isVisible() ? options.closeOnClick && _this.hidePanel() : options.openOnClick && _this.showPanel();
                     e.preventDefault();
                 });
             }
+            options.map && this.setMap(options.map);
         };
         LayerSwitcher.prototype.isVisible = function () {
             return this.element.className != this.hiddenClassName;
@@ -739,6 +821,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
         LayerSwitcher.prototype.hidePanel = function () {
             this.element.className = this.hiddenClassName;
             this.unwatch.forEach(function (f) { return f(); });
+            this.unwatch = [];
         };
         LayerSwitcher.prototype.renderPanel = function () {
             var _this = this;
@@ -815,9 +898,7 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                         index_1.toggle(ul_1, "hide-layer-group", !input_1.checked);
                         _this.setVisible(lyr, input_1.checked);
                         var childLayers = lyr.getLayers();
-                        _this.state
-                            .filter(function (s) { return s.container === ul_1 && s.input && s.input.checked; })
-                            .forEach(function (state) {
+                        _this.state.filter(function (s) { return s.container === ul_1 && s.input && s.input.checked; }).forEach(function (state) {
                             _this.setVisible(state.layer, input_1.checked);
                         });
                     });
@@ -876,9 +957,107 @@ define("ol3-layerswitcher/ol3-layerswitcher", ["require", "exports", "openlayers
                 .reverse();
             return lyrs.filter(function (l) { return !!l.get("title"); }).forEach(function (l) { return _this.renderLayer(l, elm); });
         };
+        LayerSwitcher.prototype.addLayer = function (layer, title) {
+            layer.set("title", title);
+        };
         return LayerSwitcher;
     }(ol.control.Control));
     exports.LayerSwitcher = LayerSwitcher;
+});
+define("tests/extras/kill", ["require", "exports", "node_modules/ol3-fun/tests/base"], function (require, exports, base_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function kill(target, delay) {
+        if (delay === void 0) { delay = 1000; }
+        var cancel = false;
+        var control = target;
+        var map = target;
+        if (control.getMap)
+            map = control.getMap();
+        else
+            control = null;
+        map.once("pointermove", function () {
+            cancel = true;
+        });
+        return function () {
+            if (cancel)
+                throw "cancelled by user via pointermove";
+            return base_1.slowloop([
+                function () {
+                    if (cancel)
+                        throw "cancelled by user via pointermove";
+                    map.getTarget().remove();
+                    map.setTarget(null);
+                    control && control.destroy();
+                }
+            ], delay);
+        };
+    }
+    exports.kill = kill;
+});
+define("tests/extras/setText", ["require", "exports", "openlayers"], function (require, exports, ol) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function setText(feature, text) {
+        feature.set("text", text);
+        var style = feature.getStyle();
+        style.getText().setText(text);
+    }
+    exports.setText = setText;
+    function createFeature(layer) {
+        var feature = new ol.Feature();
+        var geom = new ol.geom.Point([0, 0]);
+        feature.setGeometry(geom);
+        layer.getSource().addFeature(feature);
+        feature.setStyle(new ol.style.Style({
+            image: new ol.style.RegularShape({
+                points: 5,
+                radius1: 20,
+                radius2: 10,
+                stroke: new ol.style.Stroke({
+                    color: "white",
+                    width: 2
+                }),
+                fill: new ol.style.Fill({ color: "black" })
+            }),
+            text: new ol.style.Text({
+                stroke: new ol.style.Stroke({
+                    color: "white",
+                    width: 2
+                }),
+                fill: new ol.style.Fill({ color: "black" }),
+                text: "Click The Map"
+            })
+        }));
+        feature.set("layer", layer);
+        return feature;
+    }
+    exports.createFeature = createFeature;
+    function createVectorLayer(map) {
+        var layer = new ol.layer.Vector();
+        var source = new ol.source.Vector();
+        layer.setSource(source);
+        map.addLayer(layer);
+        return layer;
+    }
+    exports.createVectorLayer = createVectorLayer;
+    function createMap(target) {
+        return new ol.Map({
+            target: target,
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 10
+            })
+        });
+    }
+    exports.createMap = createMap;
+    function createMapTarget() {
+        var target = document.createElement("map");
+        target.id = target.className = "map";
+        document.body.appendChild(target);
+        return target;
+    }
+    exports.createMapTarget = createMapTarget;
 });
 define("index", ["require", "exports", "ol3-layerswitcher/ol3-layerswitcher"], function (require, exports, ol3_layerswitcher_1) {
     "use strict";
@@ -886,29 +1065,39 @@ define("index", ["require", "exports", "ol3-layerswitcher/ol3-layerswitcher"], f
     exports.LayerSwitcher = ol3_layerswitcher_1.LayerSwitcher;
     exports.DEFAULT_OPTIONS = ol3_layerswitcher_1.DEFAULT_OPTIONS;
 });
-define("tests/spec/layerswitcher", ["require", "exports", "openlayers", "node_modules/ol3-fun/tests/base", "index", "node_modules/ol3-fun/index"], function (require, exports, ol, base_1, index_2, index_3) {
+define("tests/spec/layerswitcher", ["require", "exports", "openlayers", "node_modules/ol3-fun/tests/base", "tests/extras/kill", "tests/extras/setText", "index", "node_modules/ol3-fun/index"], function (require, exports, ol, base_2, kill_1, setText_1, index_2, index_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    base_1.describe("LayerSwitcher Tests", function () {
-        base_1.it("LayerSwitcher", function () {
-            base_1.should(!!index_2.LayerSwitcher, "LayerSwitcher");
+    base_2.describe("LayerSwitcher Tests", function () {
+        base_2.it("LayerSwitcher", function () {
+            base_2.should(!!index_2.LayerSwitcher, "LayerSwitcher");
         });
-        base_1.it("DEFAULT_OPTIONS", function () {
+        base_2.it("DEFAULT_OPTIONS", function () {
             var options = index_2.DEFAULT_OPTIONS;
             checkDefaultInputOptions(options);
         });
-        base_1.it("Renders in DOM", function (done) {
-            var cssout = index_3.cssin("map", ".map {width:16em;height:12em;border:1pt solid}");
-            var target = document.createElement("div");
-            target.className = "map";
-            document.body.appendChild(target);
-            var map = new ol.Map({
-                controls: [],
-                interactions: [],
-                layers: [],
-                target: target,
+        base_2.it("Renders in DOM", function () {
+            var target = setText_1.createMapTarget();
+            var map = setText_1.createMap(target);
+            var layer = setText_1.createVectorLayer(map);
+            setText_1.createFeature(layer);
+            var switcher = index_2.LayerSwitcher.create({
+                position: "top-2 right-2",
+                map: map
             });
-            var switcher = new index_2.LayerSwitcher({});
+            var labelCount = document.getElementsByTagName("label").length;
+            switcher.addLayer(layer, "Vectors");
+            switcher.showPanel();
+            return index_3.slowloop([
+                function () {
+                    base_2.shouldEqual(document.getElementsByTagName("label").length, labelCount + 1, "Vectors label exists");
+                }
+            ]).then(kill_1.kill(switcher, 1000));
+        });
+        base_2.it("Renders in DOM (complex)", function () {
+            var target = setText_1.createMapTarget();
+            var map = setText_1.createMap(target);
+            var switcher = index_2.LayerSwitcher.create({ map: map, position: "top right" });
             var refresh = function (msg) {
                 console.log("refresh", msg);
                 switcher.hidePanel();
@@ -919,20 +1108,25 @@ define("tests/spec/layerswitcher", ["require", "exports", "openlayers", "node_mo
                     title: "Tile " + n,
                     visible: n === "Bing",
                     type: "base",
-                    source: new ol.source.Tile({ projection: "EPSG:3857" }),
+                    source: new ol.source.TileDebug({
+                        projection: "EPSG:3857",
+                        tileGrid: ol.tilegrid.createXYZ({
+                            tileSize: 256
+                        })
+                    })
                 });
             });
             var groupLayers = new ol.Collection();
             var group1 = new ol.layer.Group({
                 title: "Basemaps",
                 visible: true,
-                layers: groupLayers,
+                layers: groupLayers
             });
             var vectors = ["Parcel", "Addresses", "Streets"].map(function (n) {
                 return new ol.layer.Vector({
                     title: n,
                     visible: n === "Addresses",
-                    source: new ol.source.Vector({}),
+                    source: new ol.source.Vector({})
                 });
             });
             var mapLayers = map.getLayers();
@@ -942,11 +1136,10 @@ define("tests/spec/layerswitcher", ["require", "exports", "openlayers", "node_mo
             groupLayers.on("add", function (args) { return refresh("add " + args.target.get("title")); });
             mapLayers.on("add", function (args) { return refresh("add " + args.target.get("title")); });
             mapLayers.on("remove", function (args) { return refresh("remove " + args.target.get("title")); });
-            switcher.setMap(map);
-            index_3.slowloop([
+            return index_3.slowloop([
                 function () {
                     switcher.showPanel();
-                    base_1.shouldEqual(switcher.isVisible(), true, "Panel is visible");
+                    base_2.shouldEqual(switcher.isVisible(), true, "Panel is visible");
                 },
                 function () { return mapLayers.insertAt(0, group1); },
                 function () { return groupLayers.insertAt(0, tiles[0]); },
@@ -968,35 +1161,78 @@ define("tests/spec/layerswitcher", ["require", "exports", "openlayers", "node_mo
                 function () { return switcher.showPanel(); },
                 function () { return mapLayers.remove(vectors[2]); },
                 function () { return mapLayers.insertAt(0, vectors[2]); },
-                function () { return vectors[2].setVisible(true); },
-            ], 100).then(function () {
-                base_1.shouldEqual(vectors[0].getVisible(), false, "Parcel is hidden");
+                function () { return vectors[2].setVisible(true); }
+            ], 100)
+                .then(function () {
+                base_2.shouldEqual(vectors[0].getVisible(), false, "Parcel is hidden");
                 vectors[0].setVisible(true);
-                base_1.shouldEqual(vectors[1].getVisible(), true, "Address is visible");
-                base_1.shouldEqual(vectors[2].getVisible(), true, "Address is visible");
-                base_1.shouldEqual(tiles[0].getVisible(), true, "Bing is visible");
-                base_1.shouldEqual(tiles[1].getVisible(), false, "OSM is hidden");
+                base_2.shouldEqual(vectors[1].getVisible(), true, "Address is visible");
+                base_2.shouldEqual(vectors[2].getVisible(), true, "Address is visible");
+                base_2.shouldEqual(tiles[0].getVisible(), true, "Bing is visible");
+                base_2.shouldEqual(tiles[1].getVisible(), false, "OSM is hidden");
                 tiles[1].setVisible(true);
-                base_1.shouldEqual(tiles[1].getVisible(), true, "OSM is now visible");
-                base_1.shouldEqual(tiles[0].getVisible(), true, "Bing is still visible");
-                base_1.shouldEqual(switcher.isVisible(), true, "Panel is visible");
-                done();
-            });
-        }).timeout(20 * 200);
+                base_2.shouldEqual(tiles[1].getVisible(), true, "OSM is now visible");
+                base_2.shouldEqual(tiles[0].getVisible(), true, "Bing is still visible");
+                base_2.shouldEqual(switcher.isVisible(), true, "Panel is visible");
+            })
+                .then(kill_1.kill(switcher));
+        }).timeout(5000);
     });
     function checkDefaultInputOptions(options) {
-        base_1.should(!!options, "options");
-        base_1.shouldEqual(options.className, "layer-switcher", "className");
-        base_1.shouldEqual(options.closeOnClick, true, "closeOnClick");
-        base_1.shouldEqual(options.closeOnMouseOut, false, "closeOnMouseOut");
-        base_1.shouldEqual(options.openOnClick, true, "openOnClick");
-        base_1.shouldEqual(options.openOnMouseOver, false, "openOnMouseOver");
-        base_1.shouldEqual(options.target, undefined, "target");
-        base_1.shouldEqual(options.tipLabel, "Layers", "tipLabel");
+        base_2.should(!!options, "options");
+        base_2.shouldEqual(options.className, "layer-switcher", "className");
+        base_2.shouldEqual(options.closeOnClick, true, "closeOnClick");
+        base_2.shouldEqual(options.closeOnMouseOut, false, "closeOnMouseOut");
+        base_2.shouldEqual(options.openOnClick, true, "openOnClick");
+        base_2.shouldEqual(options.openOnMouseOver, false, "openOnMouseOver");
+        base_2.shouldEqual(options.target, undefined, "target");
+        base_2.shouldEqual(options.tipLabel, "Layers", "tipLabel");
     }
 });
 define("tests/index", ["require", "exports", "tests/spec/layerswitcher"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+});
+define("tests/extras/once", ["require", "exports", "jquery"], function (require, exports, $) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function once(map, event, cb) {
+        var d = $.Deferred();
+        map.once(event, function () {
+            try {
+                $.when(cb())
+                    .then(function (result) { return d.resolve(result); })
+                    .catch(function (ex) { return d.reject(ex); });
+            }
+            catch (ex) {
+                d.reject(ex);
+            }
+        });
+        return d;
+    }
+    exports.once = once;
+});
+define("tests/spec/map", ["require", "exports", "node_modules/ol3-fun/tests/base", "tests/extras/kill", "tests/extras/once", "tests/extras/setText"], function (require, exports, base_3, kill_2, once_1, setText_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    base_3.describe("spec/map", function () {
+        base_3.it("shows a map", function () {
+            var target = setText_2.createMapTarget();
+            var map = setText_2.createMap(target);
+            var layer = setText_2.createVectorLayer(map);
+            var textFeature = setText_2.createFeature(layer);
+            var startTicks = Date.now();
+            return once_1.once(map, "postrender", function () {
+                return base_3.slowloop([
+                    function () {
+                        var ticks = Math.round((4000 - (Date.now() - startTicks)) / 100) / 10;
+                        setText_2.setText(textFeature, "map will self-destruct in " + ticks + " seconds");
+                    }
+                ], 200, 20)
+                    .then(kill_2.kill(map, 0))
+                    .catch();
+            });
+        });
+    });
 });
 //# sourceMappingURL=tests.max.js.map
