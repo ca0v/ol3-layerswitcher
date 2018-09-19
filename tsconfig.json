@@ -9,7 +9,8 @@
 		"outFile": "built/index.max.js",
 		"sourceMap": true,
 		"moduleResolution": "classic",
-		"baseUrl": "node_modules"
+		"baseUrl": "node_modules",
+		"lib": ["esnext", "dom"]
 	},
 	"include": ["index.ts"]
 }
