@@ -4,25 +4,29 @@ $white: white;
 
 .ol-control.layer-switcher {
 	position: absolute;
-	top: 0.5em;
-	right: 0.5em;
+	top: auto;
+	left: auto;
+	right: auto;
+	bottom: auto;
+
 	max-height: calc(100% - 3.5em);
 	overflow-y: auto;
-	
+
 	text-align: left;
 	&.shown {
 		.panel {
 			display: block;
+			min-height: 2em;
 		}
 		button {
-			position:absolute;
-			right:18px;
-			top:14px;
+			position: absolute;
+			right: 18px;
+			top: 0.5em;
 			width: 0;
-			height:0;
-			color:black;
+			height: 0;
+			color: black;
 			&::after {
-				content: "✖"
+				content: "✖";
 			}
 		}
 	}
@@ -32,22 +36,24 @@ $white: white;
 		background-color: $white;
 		display: none;
 		overflow-y: auto;
-        ul.hide-layer-group {
-            display:none;
-        }
+		ul.hide-layer-group {
+			display: none;
+		}
 	}
 	button {
 		&::after {
-			content: "☑"
+			content: "☑";
 		}
 	}
 	ul {
+		margin: 0;
 		padding-left: 1em;
+		padding-top: 2px;
+		padding-bottom: 3px;
 		list-style: none;
 	}
 	li {
 		&.group {
-			padding-top: 5px;
 			> label {
 				font-weight: bold;
 			}
@@ -60,7 +66,7 @@ $white: white;
 				content: "";
 			}
 			&.loading::after {
-				content: url('./progress-16.gif');
+				content: url("./progress-16.gif");
 			}
 			label {
 				display: table-cell;
@@ -73,6 +79,7 @@ $white: white;
 		}
 	}
 	input {
-		margin: 4px;
+		margin: 0;
+		margin-right: 0.5em;
 	}
 }
